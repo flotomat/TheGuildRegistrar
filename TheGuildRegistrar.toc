@@ -11,6 +11,7 @@
 ## AddonCompartmentFuncOnLeave: TheGuildRegistrar_OnAddonCompartmentLeave
 ## X-License: GPL-3.0-or-later
 ## X-Website: https://github.com/Flotomat/TheGuildRegistrar
+## X-Curse-Project-ID: 1829301
 ## Category: Guild
 
 # Localization (add new languages here, see Locales/README.md)
