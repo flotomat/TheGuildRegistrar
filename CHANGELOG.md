@@ -1,8 +1,8 @@
 # Changelog
 
-## v0.1.0 (unreleased)
+## v0.1.0 (2026-11-24)
 
-First version.
+First test version. Please report problems on GitHub.
 
 - Matching of Discord display names with character names, public and officer notes
 - Classification: certain / likely / unlikely / unassigned, plus confirmed, guest, ignored
