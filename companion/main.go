@@ -26,6 +26,7 @@ import (
 var version = "dev"
 
 func main() {
+	removeLegacyExport()
 	if len(os.Args) > 1 && os.Args[1] == "export" {
 		os.Exit(runExportCLI(os.Args[2:]))
 	}

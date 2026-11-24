@@ -53,6 +53,9 @@ ns.RegisterLocale("deDE", {
     SETUP_GUIDE_LINK = "Ausführliche Anleitung:",
     SETUP_COPY_HINT = "Link-Feld anklicken und mit Strg+C kopieren, dann im Browser öffnen.",
     SETUP_GO_IMPORT = "Zum Import",
+    SETUP_PRIVACY_TITLE = "Datenschutz",
+    SETUP_PRIVACY_SHORT = "Alle Daten bleiben auf deinem PC. Bitte informiere deine Gildenmitglieder.",
+    SETUP_PRIVACY_TEXT = "Alle Daten bleiben auf deinem PC; das Projekt hat keinen Server und keine Telemetrie. Du entscheidest, was mit den Daten deiner Mitglieder geschieht - bitte informiere sie, dass ihre Discord-Namen und Rollen mit der Gildenliste abgeglichen werden. Die importierten Daten kannst du jederzeit im Tab Import löschen. Details:",
     DEMO_BUTTON = "Demo-Daten ausprobieren",
     DEMO_OFF_BUTTON = "Demo beenden",
     DEMO_TOOLTIP = "Lädt eine erfundene Gilde und Discord-Liste, damit du alle Funktionen ohne Gilde ausprobieren kannst. Deine echten Daten bleiben unberührt.",
@@ -78,6 +81,17 @@ ns.RegisterLocale("deDE", {
     IMPORT_WARN_EXTRA_FIELDS = "Unerwartete zusätzliche Felder:",
     IMPORT_WARN_DUPLICATE = "Anzeigename kommt mehrfach vor:",
     IMPORT_WARN_NO_HEADER = "Keine Kopfzeile gefunden - der Text wurde als einfache Namensliste gelesen.",
+    IMPORT_DELETE = "Importierte Daten löschen",
+    IMPORT_DELETE_TOOLTIP = "Entfernt die importierte Discord-Liste und alle Entscheidungen (bestätigte, abgelehnte und ignorierte Einträge) dieser Gilde aus den gespeicherten Variablen. Einstellungen wie die Rang-Zuordnung bleiben erhalten.",
+    IMPORT_DELETE_CONFIRM = "Die importierte Discord-Liste und alle bestätigten, abgelehnten und ignorierten Zuordnungen dieser Gilde löschen? Einstellungen bleiben erhalten. Das kann nicht rückgängig gemacht werden.",
+    IMPORT_DELETED = "Importierte Discord-Daten dieser Gilde gelöscht.",
+    IMPORT_DELETE_ALL = "Daten aller Gilden löschen",
+    IMPORT_DELETE_ALL_TOOLTIP = "Entfernt die importierten Discord-Listen und alle Entscheidungen aller Gilden, die auf diesem WoW-Account gespeichert sind - auch von Gilden, die du verlassen hast oder in denen nur ein anderer Charakter dieses Accounts ist. Einstellungen bleiben erhalten.",
+    IMPORT_DELETE_ALL_CONFIRM = "Die importierten Discord-Listen und alle bestätigten, abgelehnten und ignorierten Zuordnungen dieser %d Gilde(n) auf diesem Account löschen?\n\n%s\n\nEinstellungen bleiben erhalten. Das kann nicht rückgängig gemacht werden.",
+    IMPORT_DELETED_ALL = "Discord-Daten von %d Gilde(n) gelöscht.",
+    IMPORT_STORED = "|cffffd100Auf diesem Account gespeichert|r\nDiscord-Daten von %d Gilde(n): %s",
+    IMPORT_STORED_NONE = "Auf diesem Account sind keine Discord-Daten gespeichert.",
+    IMPORT_AND_MORE = "und %d weitere",
     IMPORT_HELP = "Ohne Begleitprogramm kannst du eine Liste auch von Hand schreiben: ein Discord-Name pro Zeile, optional gefolgt von ; und kommagetrennten Rollen, z. B.\nJens | Wurstinator;Raider,Mitglied",
 
     -- Abgleich
@@ -224,4 +238,5 @@ ns.RegisterLocale("deDE", {
     HELP_DEMO = "Demo-Modus mit erfundenen Daten starten",
     HELP_DEMO_OFF = "Demo-Modus beenden",
     HELP_REFRESH = "Gildenliste neu laden und erneut abgleichen",
+    HELP_WIPE = "Discord-Daten aller Gilden dieses Accounts löschen (mit Bestätigung)",
 })

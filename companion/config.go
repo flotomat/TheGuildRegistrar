@@ -44,12 +44,12 @@ func saveConfig(c Config) error {
 	return os.WriteFile(filepath.Join(dir, "config.json"), data, 0o600)
 }
 
-// saveExport writes the last export next to the config so it can be opened again.
-func saveExport(text string) (string, error) {
+// removeLegacyExport deletes "last-export.txt" written by version 0.1.0. Exports are no longer
+// stored on disk; they only live in the browser page until the companion is closed.
+func removeLegacyExport() {
 	dir, err := configDir()
 	if err != nil {
-		return "", err
+		return
 	}
-	path := filepath.Join(dir, "last-export.txt")
-	return path, os.WriteFile(path, []byte(text), 0o600)
+	_ = os.Remove(filepath.Join(dir, "last-export.txt"))
 }

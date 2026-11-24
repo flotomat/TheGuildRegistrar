@@ -19,6 +19,13 @@ START
                        Or in Terminal: xattr -d com.apple.quarantine TheGuildRegistrar-Companion
   The source code is public: https://github.com/Flotomat/TheGuildRegistrar
 
+PRIVACY
+  The app talks only to discord.com and exports only display names and role names.
+  The export is not saved to a file - it is gone when you close the app.
+  You decide what happens with your members' data and are responsible for it
+  (e.g. under the GDPR) - please inform your members.
+  Details: https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/privacy.md
+
 FULL GUIDE
   https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/setup-guide.md
   Deutsch: https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/setup-guide.de.md
@@ -42,4 +49,19 @@ WARNUNG "UNBEKANNTER HERAUSGEBER"
   macOS Gatekeeper:    Rechtsklick auf die Datei > "Öffnen" > "Öffnen".
   Der Quellcode ist öffentlich einsehbar (Link oben).
 
-License: GPL-3.0-or-later
+DATENSCHUTZ
+  Das Programm spricht nur mit discord.com und exportiert nur Anzeigenamen und Rollennamen.
+  Der Export wird nicht in einer Datei gespeichert - nach dem Beenden ist er weg.
+  Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür
+  verantwortlich (z. B. nach der DSGVO) - bitte informiere deine Mitglieder.
+  Details: https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/privacy.md#deutsch
+
+-------------------------------------------------------------------------------
+
+License: GPL-3.0-or-later. Provided without warranty and without liability to the
+extent permitted by law. / Ohne Gewährleistung und, soweit gesetzlich zulässig, ohne Haftung.
+
+The Guild Registrar is an independent fan project and is not affiliated with, endorsed
+or sponsored by Blizzard Entertainment, Inc. or Discord Inc. World of Warcraft and
+Blizzard Entertainment are trademarks or registered trademarks of Blizzard
+Entertainment, Inc.; Discord is a trademark of Discord Inc.

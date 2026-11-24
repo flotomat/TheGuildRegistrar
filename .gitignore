@@ -13,8 +13,7 @@ companion/*.exe
 .DS_Store
 Thumbs.db
 
-# Never commit tokens or exports
+# Never commit tokens
 *.token
 token.dpapi
-last-export.txt
 .env

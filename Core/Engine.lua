@@ -183,6 +183,29 @@ function Engine.Import(text)
     return parsed
 end
 
+-- Delete the imported Discord list and all decisions of the current guild.
+function Engine.DeleteImportedData()
+    if ns.demoActive then
+        return false
+    end
+    if not ns.DB.DeleteImportedData() then
+        return false
+    end
+    Engine.Run()
+    return true
+end
+
+-- Delete the Discord data of all guilds on this account. Returns the number of guilds.
+function Engine.DeleteAllImportedData()
+    local n = ns.DB.DeleteAllImportedData()
+    if ns.DB.Guild() then
+        Engine.Run()
+    elseif ns.UI and ns.UI.OnStateChanged then
+        ns.UI.OnStateChanged()
+    end
+    return n
+end
+
 -- Officer decisions --------------------------------------------------------
 
 local function decisions()

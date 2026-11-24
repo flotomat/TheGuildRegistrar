@@ -36,7 +36,7 @@ Die einmalige Einrichtung dauert etwa 10 Minuten. Du brauchst:
 ## 3. Programm verbinden
 
 1. Token in den Assistenten einfügen und **Prüfen & speichern** klicken.
-2. Das Programm prüft das Token bei Discord und speichert es verschlüsselt auf deinem PC.
+2. Das Programm prüft das Token bei Discord und speichert es geschützt auf deinem PC (Windows: verschlüsselt, macOS: Schlüsselbund, Linux: nur für dich lesbare Datei).
 3. Meldet es, dass *Server Members Intent* aus ist: zurück zu Schritt 2.4, speichern und die Seite neu laden.
 
 ## 4. Bot auf den Server einladen
@@ -52,6 +52,8 @@ Die einmalige Einrichtung dauert etwa 10 Minuten. Du brauchst:
 2. In WoW `/tgr` eingeben, den Tab **Import** öffnen, ins Textfeld klicken, **Strg+V** (Mac: **Cmd+V**) drücken und **Importieren** klicken.
 3. Der Tab **Abgleich** zeigt das Ergebnis.
 
+Der Export wird **nicht in einer Datei gespeichert**: Er liegt nur in der Zwischenablage und auf der Seite des Programms und ist nach dem Beenden weg.
+
 Später aktualisieren: Programm starten → **In die Zwischenablage exportieren** → im Spiel einfügen. Die Schritte 2-4 sind nicht mehr nötig.
 
 ## 6. Addon einstellen
@@ -59,6 +61,17 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 - **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
 - **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Twink-Muster, ignorierte Wörter, Schwellwerte.
 - Im Tab **Abgleich** per Rechtsklick Zuordnungen bestätigen, ablehnen oder ändern, Spieler anflüstern oder Gildennotizen schreiben.
+
+## Datenschutz
+
+Alle Daten bleiben auf deinem PC; das Projekt hat keinen Server und keine Telemetrie. **Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich** (z. B. nach der DSGVO):
+
+- Informiere deine Mitglieder, dass ihre Discord-Namen und Rollen mit der Gildenliste abgeglichen werden.
+- Schreibe Discord-Namen bevorzugt in Offiziersnotizen - öffentliche Notizen sieht die ganze Gilde.
+- Nutzt du einen Zwischenablageverlauf oder eine Synchronisierung der Zwischenablage, leere sie nach dem Import.
+- Lösche die Daten, wenn du sie nicht mehr brauchst: Tab Import → **Importierte Daten löschen** (aktuelle Gilde) oder **Daten aller Gilden löschen** (auch verlassene Gilden; oder `/tgr wipe` eingeben).
+
+Details: [privacy.md](privacy.md#deutsch).
 
 ## Probleme und Lösungen
 
@@ -69,4 +82,4 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 | Kein Server in der Liste | Der Bot wurde noch nicht eingeladen oder auf einen anderen Server. |
 | Einfügen in WoW passiert nichts | Erst in das große Textfeld klicken. Das Programm zeigt den Text zusätzlich in einem Feld zum manuellen Kopieren. |
 | Viele Mitglieder „nicht zugewiesen“ | Namensregel und Rang-Zuordnung prüfen, Twink-Ränge markieren, Zuordnungen manuell bestätigen. |
-| Alles wieder entfernen | Im Programm **Token entfernen**, im Developer Portal die Anwendung löschen, den Bot vom Server werfen. |
+| Alles wieder entfernen | Im Addon: Tab Import → **Daten aller Gilden löschen** oder `/tgr wipe` (um auch die Einstellungen zu entfernen, bei beendetem Spiel `WTF/Account/<Account>/SavedVariables/TheGuildRegistrar.lua` löschen). Im Programm **Token entfernen** und den Konfigurationsordner löschen ([privacy.md](privacy.md#deutsch)); im Developer Portal die Anwendung löschen; den Bot vom Server werfen. |

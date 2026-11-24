@@ -78,19 +78,89 @@ local function create(parent)
     result:SetJustifyV("TOP")
     f.result = result
 
+    -- delete Discord data (import + decisions): current guild / all guilds, always with confirmation
+    local deleteBtn = W.Button(side, L.IMPORT_DELETE, 260, 24, function()
+        ns.Dialogs.ShowConfirm(L.IMPORT_DELETE, L.IMPORT_DELETE_CONFIRM, function()
+            if ns.Engine.DeleteImportedData() then
+                f.result:SetText("|cff44ff44" .. L.IMPORT_DELETED .. "|r")
+                ns.Engine.Print(L.IMPORT_DELETED)
+            end
+        end)
+    end)
+    W.Tooltip(deleteBtn, L.IMPORT_DELETE, L.IMPORT_DELETE_TOOLTIP)
+    f.deleteBtn = deleteBtn
+
+    local deleteAllBtn = W.Button(side, L.IMPORT_DELETE_ALL, 260, 24, function()
+        ns.UI.ConfirmDeleteAllData(function(n)
+            f.result:SetText("|cff44ff44" .. string.format(L.IMPORT_DELETED_ALL, n) .. "|r")
+        end)
+    end)
+    W.Tooltip(deleteAllBtn, L.IMPORT_DELETE_ALL, L.IMPORT_DELETE_ALL_TOOLTIP)
+    f.deleteAllBtn = deleteAllBtn
+
+    local stored = W.Label(side, "", "GameFontHighlightSmall")
+    stored:SetPoint("RIGHT", 0, 0)
+    stored:SetJustifyV("BOTTOM")
+    f.stored = stored
+
     local help = W.Label(side, L.IMPORT_HELP, "GameFontDisableSmall")
     help:SetPoint("BOTTOMLEFT", 0, 0)
     help:SetPoint("RIGHT", 0, 0)
     help:SetJustifyV("BOTTOM")
+    deleteAllBtn:SetPoint("BOTTOMLEFT", help, "TOPLEFT", 0, 12)
+    deleteBtn:SetPoint("BOTTOMLEFT", deleteAllBtn, "TOPLEFT", 0, 6)
+    stored:SetPoint("BOTTOMLEFT", deleteBtn, "TOPLEFT", 0, 8)
     return f
 end
 
+-- "Guild A, Guild B, ... and 3 more" (at most `max` names)
+local function guildList(keys, max)
+    local names = {}
+    for i = 1, math.min(#keys, max) do
+        names[#names + 1] = keys[i]
+    end
+    local text = table.concat(names, ", ")
+    if #keys > max then
+        text = text .. " " .. string.format(L.IMPORT_AND_MORE, #keys - max)
+    end
+    return text
+end
+
+-- Confirm and delete the Discord data of all guilds (also used by /tgr wipe).
+function ns.UI.ConfirmDeleteAllData(onDone)
+    local keys = ns.DB.GuildsWithData()
+    if #keys == 0 then
+        ns.Engine.Print(L.IMPORT_STORED_NONE)
+        return
+    end
+    local text = string.format(L.IMPORT_DELETE_ALL_CONFIRM, #keys, guildList(keys, 15))
+    ns.Dialogs.ShowConfirm(L.IMPORT_DELETE_ALL, text, function()
+        local n = ns.Engine.DeleteAllImportedData()
+        ns.Engine.Print(string.format(L.IMPORT_DELETED_ALL, n))
+        if onDone then
+            onDone(n)
+        end
+    end)
+end
+
 local function refresh(f)
+    -- data stored on this account (all real guilds, not the demo)
+    local keys = ns.DB.GuildsWithData()
+    if #keys > 0 then
+        f.stored:SetText(string.format(L.IMPORT_STORED, #keys, guildList(keys, 6)))
+    else
+        f.stored:SetText(L.IMPORT_STORED_NONE)
+    end
+    f.deleteAllBtn:SetShown(#keys > 0)
+
     local g = ns.DB.Guild()
     if not g then
         f.current:SetText("|cffff6666" .. L.STATE_NO_GUILD .. "|r")
+        f.deleteBtn:Hide()
         return
     end
+    -- only shown when the current (non-demo) guild has data to delete
+    f.deleteBtn:SetShown(not ns.demoActive and ns.DB.HasDiscordData(g))
     if g.import then
         f.current:SetText(string.format(L.IMPORT_CURRENT, #g.import.members, #(g.import.roles or {}),
             g.import.server or "-", g.import.timestamp or "-",

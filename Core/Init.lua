@@ -32,6 +32,7 @@ local function help()
     print("  /tgr demo - " .. L.HELP_DEMO)
     print("  /tgr demo off - " .. L.HELP_DEMO_OFF)
     print("  /tgr refresh - " .. L.HELP_REFRESH)
+    print("  /tgr wipe - " .. L.HELP_WIPE)
 end
 
 SLASH_THEGUILDREGISTRAR1 = "/tgr"
@@ -54,6 +55,8 @@ SlashCmdList.THEGUILDREGISTRAR = function(msg)
         end
     elseif msg == "refresh" then
         ns.Engine.Refresh()
+    elseif msg == "wipe" then
+        ns.UI.ConfirmDeleteAllData()
     else
         help()
     end

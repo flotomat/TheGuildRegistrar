@@ -134,8 +134,9 @@
         <div id="exportStatus" class="status hidden"></div>
         <div id="exportResult" class="hidden">
           <p class="small muted" data-t="manualCopy"></p>
-          <textarea id="exportText" readonly></textarea>
+          <textarea id="exportText" readonly autocomplete="off" spellcheck="false"></textarea>
           <div class="row"><button id="copyAgain" data-t="copyAgain"></button></div>
+          <p class="small muted" data-t="notStored"></p>
         </div>
       </div>
     </div>
@@ -148,6 +149,14 @@
       </div>
     </div>
   </section>
+
+  <div class="card">
+    <h2 data-t="privacyTitle"></h2>
+    <p data-t="privacyText"></p>
+    <p data-t="privacyDuty"></p>
+    <a class="btn" target="_blank" rel="noopener" href="https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/privacy.md" data-t="privacyLink"></a>
+    <p class="small muted" data-t="legal"></p>
+  </div>
 
   <footer>
     <div class="muted small">Companion {{VERSION}} &middot; GPL-3.0 &middot; <span data-t="privacy"></span></div>
@@ -173,7 +182,7 @@ const T = {
     s1d: "Optional: turn off \"Public Bot\" so only you can invite it.",
     openPortal: "Open Developer Portal",
     s2Title: "Paste the bot token",
-    s2Text: "The token is checked with Discord and stored encrypted on this PC.",
+    s2Text: "The token is checked with Discord and stored protected on this PC (see below).",
     saveToken: "Check & save",
     botTitle: "Bot connected",
     s3Title: "Invite the bot to your server",
@@ -190,6 +199,12 @@ const T = {
     removeToken: "Remove token",
     quit: "Quit",
     privacy: "Exports display names and role names only - no IDs.",
+    notStored: "The export is not saved on disk. It is only kept on this page and is gone when you close the companion.",
+    privacyTitle: "Privacy",
+    privacyText: "Discord sends the bot the full member data (e.g. user ID, user name, avatar, join date). The companion processes it only in memory and keeps only the display name (server nickname, otherwise global display name, otherwise Discord user name) and the role names. It talks only to discord.com, stores only the bot token (Windows: encrypted with DPAPI, macOS: keychain, Linux: file readable only by you) and your settings (server ID, bot option), and has no telemetry. The export is not saved to a file. Note: Windows clipboard history or cloud clipboard sync may capture the copied list.",
+    privacyDuty: "You decide what happens with the data of your members, so you are responsible for it (e.g. under the GDPR). Please tell your members that their Discord names and roles are compared with the guild roster, and follow the Discord Developer Terms and Developer Policy.",
+    privacyLink: "Full privacy notice",
+    legal: "The Guild Registrar is an independent fan project and is not affiliated with or endorsed by Blizzard Entertainment or Discord Inc. World of Warcraft is a trademark of Blizzard Entertainment, Inc.; Discord is a trademark of Discord Inc. Provided without warranty (GPL-3.0, sections 15-16). This is not legal advice.",
     storage: "Token storage: ",
     checking: "Checking...",
     tokenOk: "Token saved.",
@@ -203,7 +218,6 @@ const T = {
     exporting: "Exporting...",
     exported: "Exported {m} members and {r} roles of \"{s}\" - copied to clipboard. Now paste it in the game.",
     exportedNoClip: "Exported {m} members and {r} roles of \"{s}\". Copy the text below.",
-    savedTo: "Also saved to: ",
     missing_intent: "The bot may not read the member list. Turn on \"Server Members Intent\" in the Developer Portal (Bot page) and try again.",
     guild_not_found: "Server not found - is the bot still on this server?",
     error: "Error: ",
@@ -223,7 +237,7 @@ const T = {
     s1d: "Optional: \"Public Bot\" ausschalten, damit nur du ihn einladen kannst.",
     openPortal: "Developer Portal öffnen",
     s2Title: "Bot-Token einfügen",
-    s2Text: "Das Token wird bei Discord geprüft und verschlüsselt auf diesem PC gespeichert.",
+    s2Text: "Das Token wird bei Discord geprüft und geschützt auf diesem PC gespeichert (siehe unten).",
     saveToken: "Prüfen & speichern",
     botTitle: "Bot verbunden",
     s3Title: "Bot auf deinen Server einladen",
@@ -240,6 +254,12 @@ const T = {
     removeToken: "Token entfernen",
     quit: "Beenden",
     privacy: "Exportiert nur Anzeigenamen und Rollennamen - keine IDs.",
+    notStored: "Der Export wird nicht auf der Festplatte gespeichert. Er bleibt nur auf dieser Seite und ist nach dem Beenden des Programms weg.",
+    privacyTitle: "Datenschutz",
+    privacyText: "Discord liefert dem Bot vollständige Mitgliedsdaten (z. B. Benutzer-ID, Benutzername, Avatar, Beitrittsdatum). Das Programm verarbeitet sie nur im Arbeitsspeicher und übernimmt nur den Anzeigenamen (Server-Spitzname, sonst globaler Anzeigename, sonst Discord-Benutzername) und die Rollennamen. Es spricht nur mit discord.com, speichert nur das Bot-Token (Windows: mit DPAPI verschlüsselt, macOS: Schlüsselbund, Linux: nur für dich lesbare Datei) und deine Einstellungen (Server-ID, Bot-Option) und hat keine Telemetrie. Der Export wird nicht in einer Datei gespeichert. Hinweis: Der Windows-Zwischenablageverlauf oder eine Cloud-Synchronisierung der Zwischenablage können die kopierte Liste erfassen.",
+    privacyDuty: "Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich (z. B. nach der DSGVO). Bitte informiere deine Mitglieder, dass ihre Discord-Namen und Rollen mit der Gildenliste abgeglichen werden, und beachte die Discord Developer Terms und Developer Policy.",
+    privacyLink: "Vollständiger Datenschutzhinweis",
+    legal: "The Guild Registrar ist ein unabhängiges Fan-Projekt und steht in keiner Verbindung zu Blizzard Entertainment oder Discord Inc. und wird von diesen nicht unterstützt. World of Warcraft ist eine Marke von Blizzard Entertainment, Inc.; Discord ist eine Marke von Discord Inc. Bereitstellung ohne Gewährleistung (GPL-3.0, Abschnitte 15-16). Keine Rechtsberatung.",
     storage: "Token-Speicherung: ",
     checking: "Prüfe...",
     tokenOk: "Token gespeichert.",
@@ -253,7 +273,6 @@ const T = {
     exporting: "Exportiere...",
     exported: "{m} Mitglieder und {r} Rollen von \"{s}\" exportiert und in die Zwischenablage kopiert. Jetzt im Spiel einfügen.",
     exportedNoClip: "{m} Mitglieder und {r} Rollen von \"{s}\" exportiert. Kopiere den Text unten.",
-    savedTo: "Zusätzlich gespeichert unter: ",
     missing_intent: "Der Bot darf die Mitgliederliste nicht lesen. Schalte im Developer Portal (Seite \"Bot\") \"Server Members Intent\" ein und versuche es erneut.",
     guild_not_found: "Server nicht gefunden - ist der Bot noch auf diesem Server?",
     error: "Fehler: ",
@@ -367,7 +386,7 @@ $("exportBtn").addEventListener("click", async () => {
     $("exportResult").classList.remove("hidden");
     const ok = await copy(res.text);
     const vars = { m: res.members, r: res.roles, s: res.server };
-    show(st, ok ? "ok" : "warn", t(ok ? "exported" : "exportedNoClip", vars) + (res.file ? "\n" + t("savedTo") + res.file : ""));
+    show(st, ok ? "ok" : "warn", t(ok ? "exported" : "exportedNoClip", vars));
     st.style.whiteSpace = "pre-line";
     $("n4").classList.add("done");
   } catch (e) { show(st, "err", errText(e)); }

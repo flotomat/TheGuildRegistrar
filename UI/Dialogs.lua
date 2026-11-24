@@ -127,6 +127,8 @@ function Dialogs.ShowConfirm(title, text, onAccept)
     end
     confirmDialog.title:SetText(title or "")
     confirmDialog.text:SetText(text or "")
+    -- grow with the text (e.g. a list of guilds): title + text + buttons
+    confirmDialog:SetHeight(math.max(150, 40 + confirmDialog.text:GetStringHeight() + 50))
     confirmDialog.onAccept = onAccept
     confirmDialog:Show()
 end

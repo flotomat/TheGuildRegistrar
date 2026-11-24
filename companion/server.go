@@ -304,12 +304,8 @@ func (s *server) handleExport(r *http.Request) (any, error) {
 	cfg := s.cfg
 	s.mu.Unlock()
 	_ = saveConfig(cfg)
-	path, err := saveExport(res.Text)
-	out := map[string]any{"text": res.Text, "members": res.Members, "roles": res.Roles, "skipped": res.Skipped, "server": res.Server}
-	if err == nil {
-		out["file"] = path
-	}
-	return out, nil
+	// the export is only returned to the page - it is not stored on disk or kept in the server
+	return map[string]any{"text": res.Text, "members": res.Members, "roles": res.Roles, "skipped": res.Skipped, "server": res.Server}, nil
 }
 
 func (s *server) handlePing(r *http.Request) (any, error) {

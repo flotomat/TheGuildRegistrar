@@ -53,6 +53,9 @@ ns.RegisterLocale("enUS", {
     SETUP_GUIDE_LINK = "Detailed guide:",
     SETUP_COPY_HINT = "Click a link field and press Ctrl+C to copy it, then open it in your browser.",
     SETUP_GO_IMPORT = "Go to import",
+    SETUP_PRIVACY_TITLE = "Privacy",
+    SETUP_PRIVACY_SHORT = "All data stays on your PC. Please inform your guild members.",
+    SETUP_PRIVACY_TEXT = "All data stays on your PC; the project has no server and no telemetry. You decide what happens with the data of your members - please tell them that their Discord names and roles are compared with the guild roster. You can delete the imported data at any time in the Import tab. Details:",
     DEMO_BUTTON = "Try demo data",
     DEMO_OFF_BUTTON = "End demo",
     DEMO_TOOLTIP = "Loads a fictional guild and Discord list so you can try every feature without a guild. Your real data is not touched.",
@@ -78,6 +81,17 @@ ns.RegisterLocale("enUS", {
     IMPORT_WARN_EXTRA_FIELDS = "Unexpected extra fields:",
     IMPORT_WARN_DUPLICATE = "Display name appears more than once:",
     IMPORT_WARN_NO_HEADER = "No header line found - the text was read as a plain name list.",
+    IMPORT_DELETE = "Delete imported data",
+    IMPORT_DELETE_TOOLTIP = "Removes the imported Discord list and all decisions (confirmed, rejected and ignored entries) of this guild from your saved variables. Settings such as the rank mapping are kept.",
+    IMPORT_DELETE_CONFIRM = "Delete the imported Discord list and all confirmed, rejected and ignored assignments of this guild? Settings are kept. This cannot be undone.",
+    IMPORT_DELETED = "Imported Discord data of this guild deleted.",
+    IMPORT_DELETE_ALL = "Delete data of all guilds",
+    IMPORT_DELETE_ALL_TOOLTIP = "Removes the imported Discord lists and all decisions of every guild stored on this WoW account - also guilds you have left or in which only another character of this account is. Settings are kept.",
+    IMPORT_DELETE_ALL_CONFIRM = "Delete the imported Discord lists and all confirmed, rejected and ignored assignments of these %d guild(s) on this account?\n\n%s\n\nSettings are kept. This cannot be undone.",
+    IMPORT_DELETED_ALL = "Discord data of %d guild(s) deleted.",
+    IMPORT_STORED = "|cffffd100Stored on this account|r\nDiscord data of %d guild(s): %s",
+    IMPORT_STORED_NONE = "No Discord data is stored on this account.",
+    IMPORT_AND_MORE = "and %d more",
     IMPORT_HELP = "Without the companion app you can also type a list by hand: one Discord name per line, optionally followed by ; and comma-separated roles, e.g.\nJens | Wurstinator;Raider,Member",
 
     -- results tab
@@ -224,4 +238,5 @@ ns.RegisterLocale("enUS", {
     HELP_DEMO = "start demo mode with fictional data",
     HELP_DEMO_OFF = "end demo mode",
     HELP_REFRESH = "reload the roster and compare again",
+    HELP_WIPE = "delete the Discord data of all guilds on this account (with confirmation)",
 })

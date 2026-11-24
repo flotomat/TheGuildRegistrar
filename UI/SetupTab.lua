@@ -11,6 +11,7 @@ ns.LINKS = {
         and "https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/setup-guide.de.md"
         or "https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/setup-guide.md",
     portal = "https://discord.com/developers/applications",
+    privacy = "https://github.com/Flotomat/TheGuildRegistrar/blob/main/docs/privacy.md",
 }
 
 local function create(parent)
@@ -67,6 +68,17 @@ local function create(parent)
         ns.UI.SelectTab("import")
     end)
     importBtn:SetPoint("RIGHT", demo, "LEFT", -8, 0)
+
+    -- privacy notice: short line, full text with link in a dialog
+    local privacy = W.Button(f, L.SETUP_PRIVACY_TITLE, 140, 24, function()
+        ns.Dialogs.ShowCopy(L.SETUP_PRIVACY_TITLE, L.SETUP_PRIVACY_TEXT .. "\n\n" .. ns.LINKS.privacy, L.SETUP_COPY_HINT)
+    end)
+    privacy:SetPoint("BOTTOMLEFT", 8, 8)
+    W.Tooltip(privacy, L.SETUP_PRIVACY_TITLE, L.SETUP_PRIVACY_TEXT)
+    local privacyShort = W.Label(f, L.SETUP_PRIVACY_SHORT, "GameFontHighlightSmall")
+    privacyShort:SetPoint("LEFT", privacy, "RIGHT", 10, 0)
+    privacyShort:SetPoint("RIGHT", importBtn, "LEFT", -10, 0)
+    privacyShort:SetJustifyH("LEFT")
     return f
 end
 

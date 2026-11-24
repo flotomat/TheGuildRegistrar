@@ -39,10 +39,13 @@ Setup takes about 10 minutes and is described step by step in the app, in the ad
 | `/tgr import` | open the import tab |
 | `/tgr demo` / `/tgr demo off` | start / end demo mode |
 | `/tgr refresh` | reload the roster and compare again |
+| `/tgr wipe` | delete the Discord data of all guilds on this account (with confirmation) |
 
 ## Privacy
 
-Only Discord display names and role names are exported - no user IDs, no messages. The bot token is stored encrypted on your PC. All data stays on your computer and in your WoW saved variables. Details: [docs/privacy.md](docs/privacy.md).
+Only Discord display names and role names are exported - no user IDs, no messages. The export is not saved to a file; it is gone when you close the companion. The bot token is stored protected on your PC. All data stays on your computer and in your WoW saved variables; the project has no server and no telemetry. The imported data can be deleted at any time - for the current guild or for all guilds on your account, including guilds you have left (Import tab, or `/tgr wipe`).
+
+**You decide what happens with your members' data and are responsible for it** (e.g. under the GDPR). Please tell your members that their Discord names and roles are compared with the guild roster. Details, storage locations and recommendations: [docs/privacy.md](docs/privacy.md).
 
 ## Development
 
@@ -51,9 +54,11 @@ Only Discord display names and role names are exported - no user IDs, no message
 - Import format: [docs/import-format.md](docs/import-format.md)
 - Releases: pushing a tag `vX.Y.Z` builds the addon zip (CurseForge + GitHub) and the companion for all platforms (see `.github/workflows/release.yml`).
 
-## License
+## License and notice
 
-GPL-3.0-or-later - see [LICENSE](LICENSE).
+GPL-3.0-or-later - see [LICENSE](LICENSE). Provided without warranty and without liability to the extent permitted by law.
+
+The Guild Registrar is an independent fan project and is not affiliated with, endorsed or sponsored by Blizzard Entertainment, Inc. or Discord Inc. World of Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc.; Discord is a trademark of Discord Inc.
 
 ---
 
@@ -70,4 +75,8 @@ GPL-3.0-or-later - see [LICENSE](LICENSE).
 
 Weil ein Addon nicht ins Internet kann, liest ein kleines **Begleitprogramm** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein.
 
-**Anleitung:** [docs/setup-guide.de.md](docs/setup-guide.de.md) · **Datenschutz:** [docs/privacy.md](docs/privacy.md)
+**Datenschutz:** Exportiert werden nur Anzeigenamen und Rollennamen, keine IDs. Der Export wird nicht in einer Datei gespeichert, alle Daten bleiben auf deinem PC, es gibt keinen Server und keine Telemetrie. Importierte Daten lassen sich jederzeit löschen - für die aktuelle Gilde oder für alle Gilden deines Accounts, auch verlassene (Tab Import oder `/tgr wipe`). **Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich** (z. B. nach der DSGVO) - bitte informiere deine Mitglieder über den Abgleich. Details: [docs/privacy.md](docs/privacy.md#deutsch).
+
+**Anleitung:** [docs/setup-guide.de.md](docs/setup-guide.de.md)
+
+**Hinweis:** The Guild Registrar ist ein unabhängiges Fan-Projekt und steht in keiner Verbindung zu Blizzard Entertainment, Inc. oder Discord Inc. World of Warcraft und Blizzard Entertainment sind Marken oder eingetragene Marken von Blizzard Entertainment, Inc.; Discord ist eine Marke von Discord Inc. Lizenz: GPL-3.0-or-later, ohne Gewährleistung und, soweit gesetzlich zulässig, ohne Haftung.

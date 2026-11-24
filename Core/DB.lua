@@ -107,6 +107,67 @@ function DB.ClearDecisions(which)
     end
 end
 
+-- True if a guild entry holds Discord data (imported list or any decision - they contain Discord names).
+function DB.HasDiscordData(g)
+    if not g then
+        return false
+    end
+    if g.import then
+        return true
+    end
+    local d = g.decisions
+    if not d then
+        return false
+    end
+    for _, list in pairs(d) do
+        if type(list) == "table" and next(list) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Keys ("Guild-Realm") of all real guilds (not the demo) that hold Discord data, sorted.
+function DB.GuildsWithData()
+    local keys = {}
+    if ns.db and ns.db.guilds then
+        for key, g in pairs(ns.db.guilds) do
+            if key ~= ns.Demo.GUILD_KEY and DB.HasDiscordData(g) then
+                keys[#keys + 1] = key
+            end
+        end
+    end
+    table.sort(keys)
+    return keys
+end
+
+local function clearDiscordData(g)
+    g.import = nil
+    g.decisions = nil
+    ensureDecisions(g)
+end
+
+-- Delete all Discord data of the current guild: the imported list and every decision
+-- (they contain Discord names). Settings such as the rank mapping are kept.
+function DB.DeleteImportedData()
+    local g = DB.Guild()
+    if not g then
+        return false
+    end
+    clearDiscordData(g)
+    return true
+end
+
+-- Delete the Discord data of every guild on this account (not the demo). Settings are kept.
+-- Returns the number of guilds whose data was deleted.
+function DB.DeleteAllImportedData()
+    local keys = DB.GuildsWithData()
+    for _, key in ipairs(keys) do
+        clearDiscordData(ns.db.guilds[key])
+    end
+    return #keys
+end
+
 function DB.ResetDemo()
     if ns.db then
         ns.db.guilds[ns.Demo.GUILD_KEY] = nil
