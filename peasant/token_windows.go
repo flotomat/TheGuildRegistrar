@@ -1,6 +1,6 @@
 //go:build windows
 
-// The Guild Registrar Companion - token storage on Windows: encrypted with DPAPI (only the current Windows user can decrypt).
+// Peasant (The Guild Registrar) - token storage on Windows: encrypted with DPAPI (only the current Windows user can decrypt).
 package main
 
 import (

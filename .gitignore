@@ -5,8 +5,8 @@
 
 # Build output
 dist/
-companion/TheGuildRegistrar-Companion*
-companion/*.exe
+peasant/TheGuildRegistrar-Peasant*
+peasant/*.exe
 .release/
 
 # OS

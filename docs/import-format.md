@@ -1,6 +1,6 @@
 # Import format `TGR1`
 
-The companion app produces this text; the addon reads it. It is simple enough to write by hand.
+Peasant (the helper app) produces this text; the addon reads it. It is simple enough to write by hand.
 
 ```
 #TGR1;2026-11-24T20:15:00Z;My Server

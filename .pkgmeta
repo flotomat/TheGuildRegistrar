@@ -9,7 +9,7 @@ manual-changelog:
   markup-type: markdown
 
 ignore:
-  - companion
+  - peasant
   - docs
   - PLAN.md
   - README.md

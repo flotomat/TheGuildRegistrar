@@ -1,4 +1,4 @@
-# Release: push a tag like v1.0.0 -> addon zip to CurseForge + GitHub release, companion builds attached.
+# Release: push a tag like v1.0.0 -> addon zip to CurseForge + GitHub release, Peasant (helper app) builds attached.
 name: Release
 
 on:
@@ -23,7 +23,7 @@ jobs:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
-  companion:
+  peasant:
     needs: addon
     runs-on: ubuntu-latest
     steps:
@@ -34,11 +34,11 @@ jobs:
           go-version: stable
 
       - name: Test
-        working-directory: companion
+        working-directory: peasant
         run: go test ./...
 
       - name: Build
-        working-directory: companion
+        working-directory: peasant
         env:
           CGO_ENABLED: "0"
           VERSION: ${{ github.ref_name }}
@@ -47,11 +47,11 @@ jobs:
           mkdir -p ../dist
           build() {
             local os=$1 arch=$2 label=$3 ext=$4
-            local dir="TheGuildRegistrar-Companion-${label}"
+            local dir="TheGuildRegistrar-Peasant-${label}"
             mkdir -p "$dir"
-            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$dir/TheGuildRegistrar-Companion${ext}" .
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$dir/TheGuildRegistrar-Peasant${ext}" .
             cp ../LICENSE "$dir/"
-            cp ../docs/companion-readme.txt "$dir/README.txt"
+            cp ../docs/peasant-readme.txt "$dir/README.txt"
             if [ "$os" = "linux" ]; then
               tar -czf "../dist/${dir}.tar.gz" "$dir"
             else

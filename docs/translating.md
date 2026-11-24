@@ -7,4 +7,4 @@
 
 WoW locale codes: `enUS`, `deDE`, `frFR`, `esES`, `esMX`, `itIT`, `ptBR`, `ruRU`, `koKR`, `zhCN`, `zhTW`.
 
-The companion app's texts are in `companion/web/index.html` (object `T`).
+The texts of Peasant (the helper app) are in `peasant/web/index.html` (object `T`).

@@ -8,15 +8,15 @@
 
 The Guild Registrar has no server, no telemetry and no analytics. The developer never receives, stores or sees any data. Everything happens on your own computer and in your own WoW installation. **You** decide what happens with the data of your members - please read [Your responsibility](#your-responsibility).
 
-### What the companion app reads
+### What Peasant (the helper app) reads
 
-The companion app uses *your own* Discord bot to read, for one server you choose:
+Peasant, the helper app, uses *your own* Discord bot to read, for one server you choose:
 
 - the server name,
 - the role names and their order,
 - the member list.
 
-For the member list Discord sends the bot the **complete member data** (among others user ID, user name, global display name, server nickname, avatar, join date and role IDs). The companion processes this **only in memory** and takes from it only:
+For the member list Discord sends the bot the **complete member data** (among others user ID, user name, global display name, server nickname, avatar, join date and role IDs). Peasant processes this **only in memory** and takes from it only:
 
 - the **display name** of each member - the server nickname, otherwise the global display name, otherwise the Discord **user name** (which is unique and can be found on Discord),
 - the **names of the member's roles**.
@@ -25,7 +25,7 @@ Member and role IDs are used only internally to put this together and are **not 
 
 ### Where data goes
 
-- **Network:** the companion talks only to the official Discord API (`discord.com`). Its user interface runs in your browser but is only reachable from your own PC (`127.0.0.1`, protected by a random key).
+- **Network:** Peasant talks only to the official Discord API (`discord.com`). Its user interface runs in your browser but is only reachable from your own PC (`127.0.0.1`, protected by a random key).
 - **Export:** the list is copied to your clipboard and shown on the app's page. It is **not saved to a file** and is gone when you close the app. (Version 0.1.0 saved it as `last-export.txt`; newer versions delete that file on start.) Only if you use the command line yourself (`export -out FILE`) is a file written - where you say.
 - **Clipboard:** Windows clipboard history (Win+V) or clipboard sync between devices (Windows cloud clipboard, Apple Universal Clipboard, clipboard managers) can capture the copied list. If you use such features, clear the clipboard after the import or turn them off for this.
 - **In the game:** the imported list, your settings and your decisions (which Discord name belongs to which character, rejected matches, ignored entries, which character is an alt of which main) are stored in the addon's saved variables (`WTF/Account/<account>/SavedVariables/TheGuildRegistrar.lua`), separately for each guild. They belong to your WoW account on the PC you play on and are shared by all characters of that account - so data of a guild you have left, or of a guild only another character of yours is in, stays there until you delete it. Saved variables stay on your PC; the addon does not send any addon messages to other players. Other guild members only have such data if they import a list themselves.
@@ -69,9 +69,9 @@ The Guild Registrar is an independent fan project and is not affiliated with, en
 
 The Guild Registrar hat keinen Server, keine Telemetrie und keine Analyse. Der Entwickler erhält, speichert oder sieht keine Daten. Alles geschieht auf deinem eigenen Rechner und in deiner eigenen WoW-Installation. **Du** entscheidest, was mit den Daten deiner Mitglieder geschieht - bitte lies [Deine Verantwortung](#deine-verantwortung).
 
-### Was das Begleitprogramm liest
+### Was das Hilfsprogramm Peasant liest
 
-Das Begleitprogramm liest mit *deinem eigenen* Discord-Bot für einen von dir gewählten Server:
+Das Hilfsprogramm Peasant liest mit *deinem eigenen* Discord-Bot für einen von dir gewählten Server:
 
 - den Servernamen,
 - die Rollennamen und deren Reihenfolge,

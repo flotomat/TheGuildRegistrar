@@ -1,6 +1,6 @@
 //go:build darwin
 
-// The Guild Registrar Companion - token storage on macOS: login keychain via the "security" tool.
+// Peasant (The Guild Registrar) - token storage on macOS: login keychain via the "security" tool.
 package main
 
 import (

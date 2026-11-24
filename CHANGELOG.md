@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 (2026-11-24)
+
+- The companion app is now called **Peasant** (files `TheGuildRegistrar-Peasant-<system>.zip` / `TheGuildRegistrar-Peasant(.exe)`, source folder `peasant/`). Settings and the saved bot token are kept - just replace the old program with the new one.
+
 ## v0.3.0 (2026-11-24)
 
 - Writing guild notes is disabled: WoW: Forever reserves it for the Blizzard UI (addons are blocked even on a direct click). The menu entry is shown greyed out; instead a note suggestion can be copied and pasted in the guild window.

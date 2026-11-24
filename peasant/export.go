@@ -1,4 +1,4 @@
-// The Guild Registrar Companion - build the import text for the addon (format TGR1, see docs/import-format.md).
+// Peasant (The Guild Registrar) - build the import text for the addon (format TGR1, see docs/import-format.md).
 package main
 
 import (

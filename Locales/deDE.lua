@@ -48,9 +48,9 @@ ns.RegisterLocale("deDE", {
     STATUS_IGNORED = "ignoriert",
 
     -- Einrichtung
-    SETUP_INTRO = "The Guild Registrar gleicht die Anzeigenamen eurer Discord-Mitglieder mit der Gildenliste ab. Ein Addon kann nicht auf Discord zugreifen, daher exportiert ein kleines Begleitprogramm die Mitgliederliste und du fügst sie hier ein. Die einmalige Einrichtung dauert ca. 10 Minuten:",
-    SETUP_STEP1_TITLE = "Begleitprogramm herunterladen",
-    SETUP_STEP1_TEXT = "Lade \"TheGuildRegistrar-Companion\" für dein System von der GitHub-Release-Seite herunter und starte es. Es läuft im Browser und nur auf deinem eigenen PC. Windows/macOS warnen evtl., dass das Programm nicht signiert ist - siehe Anleitung.",
+    SETUP_INTRO = "The Guild Registrar gleicht die Anzeigenamen eurer Discord-Mitglieder mit der Gildenliste ab. Ein Addon kann nicht auf Discord zugreifen, daher exportiert das kleine Hilfsprogramm Peasant die Mitgliederliste und du fügst sie hier ein. Die einmalige Einrichtung dauert ca. 10 Minuten:",
+    SETUP_STEP1_TITLE = "Peasant herunterladen",
+    SETUP_STEP1_TEXT = "Lade \"TheGuildRegistrar-Peasant\" für dein System von der GitHub-Release-Seite herunter und starte es. Es läuft im Browser und nur auf deinem eigenen PC. Windows/macOS warnen evtl., dass das Programm nicht signiert ist - siehe Anleitung.",
     SETUP_STEP2_TITLE = "Eigenen Discord-Bot anlegen",
     SETUP_STEP2_TEXT = "Das Programm führt dich durch: Anwendung im Discord Developer Portal anlegen, Bot hinzufügen, \"Server Members Intent\" einschalten und das Bot-Token einfügen. Der Bot braucht keine Rechte und liest nur Anzeigenamen und Rollennamen.",
     SETUP_STEP3_TITLE = "Bot auf den Server einladen",
@@ -72,7 +72,7 @@ ns.RegisterLocale("deDE", {
     DEMO_STOPPED = "Demo-Modus beendet.",
 
     -- Import
-    IMPORT_INTRO = "Füge den vom Begleitprogramm exportierten Text ein (Strg+V) und klicke auf \"Importieren\". Ein neuer Import ersetzt die bisherige Discord-Liste; deine Entscheidungen und Einstellungen bleiben erhalten.",
+    IMPORT_INTRO = "Füge den von Peasant exportierten Text ein (Strg+V) und klicke auf \"Importieren\". Ein neuer Import ersetzt die bisherige Discord-Liste; deine Entscheidungen und Einstellungen bleiben erhalten.",
     IMPORT_BUTTON = "Importieren",
     IMPORT_CLEAR = "Leeren",
     IMPORT_TO_RESULTS = "Zum Abgleich",
@@ -101,7 +101,7 @@ ns.RegisterLocale("deDE", {
     IMPORT_STORED = "|cffffd100Auf diesem Account gespeichert|r\nDiscord-Daten von %d Gilde(n): %s",
     IMPORT_STORED_NONE = "Auf diesem Account sind keine Discord-Daten gespeichert.",
     IMPORT_AND_MORE = "und %d weitere",
-    IMPORT_HELP = "Ohne Begleitprogramm kannst du eine Liste auch von Hand schreiben: ein Discord-Name pro Zeile, optional gefolgt von ; und kommagetrennten Rollen, z. B.\nJens | Wurstinator;Raider,Mitglied",
+    IMPORT_HELP = "Ohne Peasant kannst du eine Liste auch von Hand schreiben: ein Discord-Name pro Zeile, optional gefolgt von ; und kommagetrennten Rollen, z. B.\nJens | Wurstinator;Raider,Mitglied",
 
     -- Abgleich
     COL_STATUS = "Status",

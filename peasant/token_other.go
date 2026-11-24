@@ -1,6 +1,6 @@
 //go:build !windows && !darwin
 
-// The Guild Registrar Companion - token storage on Linux and others: file readable only by the current user.
+// Peasant (The Guild Registrar) - token storage on Linux and others: file readable only by the current user.
 package main
 
 import (

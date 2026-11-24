@@ -1,4 +1,4 @@
-// The Guild Registrar Companion - open a URL in the default browser.
+// Peasant (The Guild Registrar) - open a URL in the default browser.
 package main
 
 import (

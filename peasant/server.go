@@ -1,4 +1,4 @@
-// The Guild Registrar Companion - local web interface (only reachable from this PC).
+// Peasant (The Guild Registrar) - local web interface (only reachable from this PC).
 package main
 
 import (
@@ -64,12 +64,12 @@ func runServer(open bool) error {
 	mux.HandleFunc("/api/quit", s.api(s.handleQuit))
 	srv := &http.Server{Handler: s.guard(mux), ReadHeaderTimeout: 10 * time.Second}
 
-	fmt.Println("The Guild Registrar Companion", version)
+	fmt.Println("Peasant (The Guild Registrar)", version)
 	fmt.Println()
 	fmt.Println("The interface is running in your browser. If it did not open, copy this address:")
 	fmt.Println("  " + url)
 	fmt.Println()
-	fmt.Println("Close this window (or click \"Quit\" in the browser) to stop the companion.")
+	fmt.Println("Close this window (or click \"Quit\" in the browser) to stop Peasant.")
 
 	if open {
 		if err := openBrowser(url); err != nil {
@@ -130,7 +130,7 @@ func (s *server) validKey(k string) bool {
 
 func (s *server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" || !s.validKey(r.URL.Query().Get("k")) {
-		http.Error(w, "Please use the address shown in the companion window.", http.StatusForbidden)
+		http.Error(w, "Please use the address shown in the Peasant window.", http.StatusForbidden)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

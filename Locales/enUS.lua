@@ -48,11 +48,11 @@ ns.RegisterLocale("enUS", {
     STATUS_IGNORED = "ignored",
 
     -- setup tab
-    SETUP_INTRO = "The Guild Registrar compares the display names of your Discord members with your guild roster. A game addon cannot access Discord, so a small companion app exports the member list and you paste it here. One-time setup takes about 10 minutes:",
-    SETUP_STEP1_TITLE = "Download the companion app",
-    SETUP_STEP1_TEXT = "Download \"TheGuildRegistrar-Companion\" for your system from the GitHub release page and start it. It runs in your browser on your own PC only. Windows/macOS may warn that the app is not signed - see the guide.",
+    SETUP_INTRO = "The Guild Registrar compares the display names of your Discord members with your guild roster. A game addon cannot access Discord, so a small helper app called Peasant exports the member list and you paste it here. One-time setup takes about 10 minutes:",
+    SETUP_STEP1_TITLE = "Download Peasant",
+    SETUP_STEP1_TEXT = "Download \"TheGuildRegistrar-Peasant\" for your system from the GitHub release page and start it. It runs in your browser on your own PC only. Windows/macOS may warn that the app is not signed - see the guide.",
     SETUP_STEP2_TITLE = "Create your own Discord bot",
-    SETUP_STEP2_TEXT = "The companion app guides you: create an application in the Discord Developer Portal, add a bot, turn on \"Server Members Intent\" and paste the bot token into the app. The bot needs no permissions and only reads display names and role names.",
+    SETUP_STEP2_TEXT = "Peasant guides you: create an application in the Discord Developer Portal, add a bot, turn on \"Server Members Intent\" and paste the bot token into the app. The bot needs no permissions and only reads display names and role names.",
     SETUP_STEP3_TITLE = "Invite the bot to your server",
     SETUP_STEP3_TEXT = "The app creates the invite link for you. Someone with the \"Manage Server\" permission has to accept it once.",
     SETUP_STEP4_TITLE = "Export and paste",
@@ -72,7 +72,7 @@ ns.RegisterLocale("enUS", {
     DEMO_STOPPED = "Demo mode ended.",
 
     -- import tab
-    IMPORT_INTRO = "Paste the text exported by the companion app (Ctrl+V) and click \"Import\". A new import replaces the previous Discord list; your decisions and settings are kept.",
+    IMPORT_INTRO = "Paste the text exported by Peasant (Ctrl+V) and click \"Import\". A new import replaces the previous Discord list; your decisions and settings are kept.",
     IMPORT_BUTTON = "Import",
     IMPORT_CLEAR = "Clear",
     IMPORT_TO_RESULTS = "Show comparison",
@@ -101,7 +101,7 @@ ns.RegisterLocale("enUS", {
     IMPORT_STORED = "|cffffd100Stored on this account|r\nDiscord data of %d guild(s): %s",
     IMPORT_STORED_NONE = "No Discord data is stored on this account.",
     IMPORT_AND_MORE = "and %d more",
-    IMPORT_HELP = "Without the companion app you can also type a list by hand: one Discord name per line, optionally followed by ; and comma-separated roles, e.g.\nJens | Wurstinator;Raider,Member",
+    IMPORT_HELP = "Without Peasant you can also type a list by hand: one Discord name per line, optionally followed by ; and comma-separated roles, e.g.\nJens | Wurstinator;Raider,Member",
 
     -- results tab
     COL_STATUS = "Status",

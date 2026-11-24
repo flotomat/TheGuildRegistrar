@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Guild Registrar - Companion</title>
+<title>Peasant - The Guild Registrar</title>
 <style>
   :root {
     --bg: #f5f3ee; --card: #ffffff; --text: #1f1d1a; --muted: #6b665d; --line: #e2ddd2;
@@ -50,7 +50,7 @@
 <main>
   <header>
     <div>
-      <h1>The Guild Registrar</h1>
+      <h1>Peasant</h1>
       <div class="muted small" data-t="subtitle"></div>
     </div>
     <div class="lang"><button data-lang="de">DE</button> <button data-lang="en">EN</button></div>
@@ -159,7 +159,7 @@
   </div>
 
   <footer>
-    <div class="muted small">Companion {{VERSION}} &middot; GPL-3.0 &middot; <span data-t="privacy"></span></div>
+    <div class="muted small">Peasant {{VERSION}} &middot; The Guild Registrar &middot; GPL-3.0 &middot; <span data-t="privacy"></span></div>
     <div class="row" style="margin:0">
       <button id="removeToken" class="hidden" data-t="removeToken"></button>
       <button id="quitBtn" data-t="quit"></button>
@@ -171,7 +171,7 @@
 const KEY = "{{KEY}}";
 const T = {
   en: {
-    subtitle: "Companion app: exports your Discord member list for the WoW addon",
+    subtitle: "Helper app of the WoW addon The Guild Registrar: exports your Discord member list",
     loading: "Loading...",
     welcomeTitle: "Welcome!",
     welcomeText: "This app reads the display names and role names of your Discord server members with your own bot and puts them into your clipboard for the addon. Nothing is sent anywhere else. Setup is needed only once.",
@@ -199,9 +199,9 @@ const T = {
     removeToken: "Remove token",
     quit: "Quit",
     privacy: "Exports display names and role names only - no IDs.",
-    notStored: "The export is not saved on disk. It is only kept on this page and is gone when you close the companion.",
+    notStored: "The export is not saved on disk. It is only kept on this page and is gone when you close Peasant.",
     privacyTitle: "Privacy",
-    privacyText: "Discord sends the bot the full member data (e.g. user ID, user name, avatar, join date). The companion processes it only in memory and keeps only the display name (server nickname, otherwise global display name, otherwise Discord user name) and the role names. It talks only to discord.com, stores only the bot token (Windows: encrypted with DPAPI, macOS: keychain, Linux: file readable only by you) and your settings (server ID, bot option), and has no telemetry. The export is not saved to a file. Note: Windows clipboard history or cloud clipboard sync may capture the copied list.",
+    privacyText: "Discord sends the bot the full member data (e.g. user ID, user name, avatar, join date). Peasant processes it only in memory and keeps only the display name (server nickname, otherwise global display name, otherwise Discord user name) and the role names. It talks only to discord.com, stores only the bot token (Windows: encrypted with DPAPI, macOS: keychain, Linux: file readable only by you) and your settings (server ID, bot option), and has no telemetry. The export is not saved to a file. Note: Windows clipboard history or cloud clipboard sync may capture the copied list.",
     privacyDuty: "You decide what happens with the data of your members, so you are responsible for it (e.g. under the GDPR). Please tell your members that their Discord names and roles are compared with the guild roster, and follow the Discord Developer Terms and Developer Policy.",
     privacyLink: "Full privacy notice",
     legal: "The Guild Registrar is an independent fan project and is not affiliated with or endorsed by Blizzard Entertainment or Discord Inc. World of Warcraft is a trademark of Blizzard Entertainment, Inc.; Discord is a trademark of Discord Inc. Provided without warranty (GPL-3.0, sections 15-16). This is not legal advice.",
@@ -222,11 +222,11 @@ const T = {
     guild_not_found: "Server not found - is the bot still on this server?",
     error: "Error: ",
     confirmRemove: "Remove the saved token from this PC?",
-    bye: "The companion has stopped. You can close this tab.",
+    bye: "Peasant has stopped. You can close this tab.",
     botName: "Bot: ",
   },
   de: {
-    subtitle: "Begleitprogramm: exportiert eure Discord-Mitgliederliste für das WoW-Addon",
+    subtitle: "Hilfsprogramm des WoW-Addons The Guild Registrar: exportiert eure Discord-Mitgliederliste",
     loading: "Lade...",
     welcomeTitle: "Willkommen!",
     welcomeText: "Dieses Programm liest mit deinem eigenen Bot die Anzeigenamen und Rollennamen der Mitglieder deines Discord-Servers und legt sie für das Addon in die Zwischenablage. Es wird nichts an Dritte gesendet. Die Einrichtung ist nur einmal nötig.",

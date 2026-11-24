@@ -8,17 +8,17 @@ One-time setup takes about 10 minutes. You need:
 - a PC with Windows, macOS or Linux,
 - on your Discord server: the permission **Manage Server** - or someone who has it and opens one link for you.
 
-## 1. Download and start the companion app
+## 1. Download and start Peasant (helper app)
 
 1. Open the [latest release](https://github.com/Flotomat/TheGuildRegistrar/releases/latest) and download the file for your system:
-   - Windows: `TheGuildRegistrar-Companion-windows-x64.zip`
-   - Mac with Apple chip (M1 and newer): `TheGuildRegistrar-Companion-macos-apple-silicon.zip`
-   - Mac with Intel chip: `TheGuildRegistrar-Companion-macos-intel.zip`
-   - Linux: `TheGuildRegistrar-Companion-linux-x64.tar.gz`
-2. Unpack it into a folder of your choice and start `TheGuildRegistrar-Companion`.
+   - Windows: `TheGuildRegistrar-Peasant-windows-x64.zip`
+   - Mac with Apple chip (M1 and newer): `TheGuildRegistrar-Peasant-macos-apple-silicon.zip`
+   - Mac with Intel chip: `TheGuildRegistrar-Peasant-macos-intel.zip`
+   - Linux: `TheGuildRegistrar-Peasant-linux-x64.tar.gz`
+2. Unpack it into a folder of your choice and start `TheGuildRegistrar-Peasant`.
 3. **Security warning:** the app is not signed with a paid certificate, so your system warns you the first time.
    - **Windows SmartScreen** ("Windows protected your PC"): click **More info** → **Run anyway**.
-   - **macOS** ("cannot be opened because the developer cannot be verified"): right-click the file → **Open** → **Open**. Alternatively, in Terminal: `xattr -d com.apple.quarantine TheGuildRegistrar-Companion`.
+   - **macOS** ("cannot be opened because the developer cannot be verified"): right-click the file → **Open** → **Open**. Alternatively, in Terminal: `xattr -d com.apple.quarantine TheGuildRegistrar-Peasant`.
    - The app is open source; you can read the code in this repository.
 4. A small console window opens and your browser shows the assistant. Leave the console window open while you use the app.
 

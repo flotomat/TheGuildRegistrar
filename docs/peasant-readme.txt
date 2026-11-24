@@ -1,13 +1,13 @@
-The Guild Registrar - Companion
-===============================
+Peasant - helper app of The Guild Registrar
+===========================================
 
 Exports the display names and role names of your Discord server members for the
 World of Warcraft: Forever addon "The Guild Registrar".
 
 START
-  Windows: double-click TheGuildRegistrar-Companion.exe
-  macOS:   right-click TheGuildRegistrar-Companion > Open (first time only, see below)
-  Linux:   ./TheGuildRegistrar-Companion
+  Windows: double-click TheGuildRegistrar-Peasant.exe
+  macOS:   right-click TheGuildRegistrar-Peasant > Open (first time only, see below)
+  Linux:   ./TheGuildRegistrar-Peasant
 
   A small window opens and your browser shows the setup assistant.
   Close the window or click "Quit" in the browser to stop the app.
@@ -16,7 +16,7 @@ START
   The app is free and not signed with a paid certificate, so your system warns you once.
   Windows SmartScreen: click "More info" > "Run anyway".
   macOS Gatekeeper:    right-click the file > "Open" > "Open".
-                       Or in Terminal: xattr -d com.apple.quarantine TheGuildRegistrar-Companion
+                       Or in Terminal: xattr -d com.apple.quarantine TheGuildRegistrar-Peasant
   The source code is public: https://github.com/Flotomat/TheGuildRegistrar
 
 PRIVACY
@@ -35,9 +35,9 @@ FULL GUIDE
 DEUTSCH
 
 START
-  Windows: Doppelklick auf TheGuildRegistrar-Companion.exe
-  macOS:   Rechtsklick auf TheGuildRegistrar-Companion > Öffnen (nur beim ersten Mal)
-  Linux:   ./TheGuildRegistrar-Companion
+  Windows: Doppelklick auf TheGuildRegistrar-Peasant.exe
+  macOS:   Rechtsklick auf TheGuildRegistrar-Peasant > Öffnen (nur beim ersten Mal)
+  Linux:   ./TheGuildRegistrar-Peasant
 
   Es öffnet sich ein kleines Fenster und im Browser der Einrichtungsassistent.
   Fenster schließen oder im Browser "Beenden" klicken, um das Programm zu beenden.

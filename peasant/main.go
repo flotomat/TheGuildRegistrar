@@ -1,15 +1,15 @@
-// The Guild Registrar Companion
+// Peasant - the helper app of the WoW addon "The Guild Registrar"
 //
-// Exports the display names and role names of a Discord server's members for the WoW addon
-// "The Guild Registrar". Uses your own Discord bot (read-only, no permissions needed).
+// Exports the display names and role names of a Discord server's members for the addon.
+// Uses your own Discord bot (read-only, no permissions needed).
 //
 // Usage:
 //
-//	tgr-companion                      start the local web interface (opens your browser)
-//	tgr-companion -no-browser          start it, but only print the address
-//	tgr-companion export [-guild ID] [-out FILE] [-include-bots]
-//	                                   export without interface (token from the saved setup or TGR_BOT_TOKEN)
-//	tgr-companion -version
+//	TheGuildRegistrar-Peasant              start the local web interface (opens your browser)
+//	TheGuildRegistrar-Peasant -no-browser  start it, but only print the address
+//	TheGuildRegistrar-Peasant export [-guild ID] [-out FILE] [-include-bots]
+//	                                       export without interface (token from the saved setup or TGR_BOT_TOKEN)
+//	TheGuildRegistrar-Peasant -version
 //
 // Copyright (C) 2026 Flotomat - GPL-3.0-or-later
 package main
@@ -35,7 +35,7 @@ func main() {
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 	if *showVersion {
-		fmt.Println("The Guild Registrar Companion", version)
+		fmt.Println("Peasant (The Guild Registrar)", version)
 		return
 	}
 	if err := runServer(!*noBrowser); err != nil {
@@ -62,7 +62,7 @@ func runExportCLI(args []string) int {
 		token = t
 	}
 	if token == "" {
-		fmt.Fprintln(os.Stderr, "No bot token. Run the companion once without arguments to set it up, or set TGR_BOT_TOKEN.")
+		fmt.Fprintln(os.Stderr, "No bot token. Run Peasant once without arguments to set it up, or set TGR_BOT_TOKEN.")
 		return 1
 	}
 	cfg := loadConfig()

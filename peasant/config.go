@@ -1,4 +1,4 @@
-// The Guild Registrar Companion - settings stored in the user config directory.
+// Peasant (The Guild Registrar) - settings stored in the user config directory.
 package main
 
 import (
@@ -45,7 +45,7 @@ func saveConfig(c Config) error {
 }
 
 // removeLegacyExport deletes "last-export.txt" written by version 0.1.0. Exports are no longer
-// stored on disk; they only live in the browser page until the companion is closed.
+// stored on disk; they only live in the browser page until Peasant is closed.
 func removeLegacyExport() {
 	dir, err := configDir()
 	if err != nil {

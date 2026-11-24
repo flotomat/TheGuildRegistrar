@@ -8,17 +8,17 @@ Die einmalige Einrichtung dauert etwa 10 Minuten. Du brauchst:
 - einen PC mit Windows, macOS oder Linux,
 - auf eurem Discord-Server das Recht **Server verwalten** - oder jemanden, der es hat und einmal einen Link für dich öffnet.
 
-## 1. Begleitprogramm herunterladen und starten
+## 1. Hilfsprogramm Peasant herunterladen und starten
 
 1. Öffne das [aktuelle Release](https://github.com/Flotomat/TheGuildRegistrar/releases/latest) und lade die Datei für dein System herunter:
-   - Windows: `TheGuildRegistrar-Companion-windows-x64.zip`
-   - Mac mit Apple-Chip (M1 und neuer): `TheGuildRegistrar-Companion-macos-apple-silicon.zip`
-   - Mac mit Intel-Chip: `TheGuildRegistrar-Companion-macos-intel.zip`
-   - Linux: `TheGuildRegistrar-Companion-linux-x64.tar.gz`
-2. In einen beliebigen Ordner entpacken und `TheGuildRegistrar-Companion` starten.
+   - Windows: `TheGuildRegistrar-Peasant-windows-x64.zip`
+   - Mac mit Apple-Chip (M1 und neuer): `TheGuildRegistrar-Peasant-macos-apple-silicon.zip`
+   - Mac mit Intel-Chip: `TheGuildRegistrar-Peasant-macos-intel.zip`
+   - Linux: `TheGuildRegistrar-Peasant-linux-x64.tar.gz`
+2. In einen beliebigen Ordner entpacken und `TheGuildRegistrar-Peasant` starten.
 3. **Sicherheitswarnung:** Das Programm ist nicht mit einem kostenpflichtigen Zertifikat signiert, deshalb warnt dein System beim ersten Start.
    - **Windows SmartScreen** („Der Computer wurde durch Windows geschützt“): **Weitere Informationen** → **Trotzdem ausführen**.
-   - **macOS** („kann nicht geöffnet werden, da der Entwickler nicht verifiziert werden kann“): Rechtsklick auf die Datei → **Öffnen** → **Öffnen**. Alternativ im Terminal: `xattr -d com.apple.quarantine TheGuildRegistrar-Companion`.
+   - **macOS** („kann nicht geöffnet werden, da der Entwickler nicht verifiziert werden kann“): Rechtsklick auf die Datei → **Öffnen** → **Öffnen**. Alternativ im Terminal: `xattr -d com.apple.quarantine TheGuildRegistrar-Peasant`.
    - Das Programm ist Open Source; der Quellcode liegt in diesem Repository.
 4. Es öffnet sich ein kleines Konsolenfenster und im Browser der Assistent. Lass das Konsolenfenster offen, solange du das Programm benutzt.
 

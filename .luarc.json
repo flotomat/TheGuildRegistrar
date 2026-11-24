@@ -9,5 +9,5 @@
     "TheGuildRegistrar_OnAddonCompartmentEnter",
     "TheGuildRegistrar_OnAddonCompartmentLeave"
   ],
-  "workspace.ignoreDir": ["companion", "docs", ".github"]
+  "workspace.ignoreDir": ["peasant", "docs", ".github"]
 }

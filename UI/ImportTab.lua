@@ -1,4 +1,4 @@
--- The Guild Registrar - "Import" tab: paste the export of the companion app
+-- The Guild Registrar - "Import" tab: paste the export of Peasant (helper app)
 
 local _, ns = ...
 

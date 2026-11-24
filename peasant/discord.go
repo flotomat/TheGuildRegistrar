@@ -1,4 +1,4 @@
-// The Guild Registrar Companion - minimal Discord REST client (bot token, read-only).
+// Peasant (The Guild Registrar) - minimal Discord REST client (bot token, read-only).
 package main
 
 import (
