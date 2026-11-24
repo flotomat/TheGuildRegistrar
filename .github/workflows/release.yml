@@ -1,21 +1,27 @@
-# Release: push a tag like v1.0.0 -> addon zip to CurseForge + GitHub release, Peasant (helper app) builds attached.
+# Release for a tag vA.B.C -> addon zip to CurseForge + GitHub release, Peasant (helper app) builds attached.
+# Normally started by version.yml after it created the tag; pushing a tag by hand still works.
 name: Release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   addon:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Release notes from commit messages
+        run: python3 .github/scripts/release.py notes "$GITHUB_REF_NAME" RELEASE_NOTES.md
 
       - name: Package addon and upload (CurseForge + GitHub release)
         uses: BigWigsMods/packager@v2

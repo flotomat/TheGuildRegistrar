@@ -1,10 +1,11 @@
-# Checks on every push / pull request: Lua syntax of the addon, tests of Peasant (helper app).
+# Checks: Lua syntax of the addon, tests of Peasant (helper app).
+# Runs on pull requests; pushes to main run it through version.yml before a release.
 name: CI
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
   lua:

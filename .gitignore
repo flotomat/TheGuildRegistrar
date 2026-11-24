@@ -8,6 +8,7 @@ dist/
 peasant/TheGuildRegistrar-Peasant*
 peasant/*.exe
 .release/
+RELEASE_NOTES.md
 
 # OS
 .DS_Store

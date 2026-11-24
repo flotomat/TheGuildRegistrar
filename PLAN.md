@@ -38,7 +38,7 @@ WoW: Forever ── /tgr → Import ── Abgleich ── Ergebnisliste / Räng
 
 - **Addon (Repository-Wurzel)**: `Locales/`, `Core/` (Defaults, DB, Engine, Demo, Init), `Data/` (Import-Parser, Roster, Notizen), `Matching/` (Text-Normalisierung, Ähnlichkeit, Twink-Gruppierung, Matcher, Rang-Check – reines Lua 5.1), `UI/` (eigene Widgets ohne veraltete Dropdown-APIs).
 - **Peasant (`peasant/`)**: Discord-REST-Client, Export, Token-Speicherung (Windows DPAPI / macOS Keychain / Linux 0600-Datei), lokaler Webserver auf 127.0.0.1 mit Zufallsschlüssel und Host-Prüfung.
-- **Releases**: Tag `vX.Y.Z` → GitHub Actions: Addon-Zip via BigWigsMods/packager (CurseForge + GitHub Release), Peasant-Builds für Windows/macOS/Linux werden an dasselbe Release gehängt.
+- **Releases**: automatisch bei jedem Push auf `main` – Version aus den Commit-Präfixen (`feat!:` → A, `feat:` → B, `fix:`/`docs:`/`ui:`/ohne Präfix → C, `ci:`/`build:`/`chore:`/`test:` → kein Release), Tag `vX.Y.Z` → GitHub Actions: Addon-Zip via BigWigsMods/packager (CurseForge + GitHub Release), Peasant-Builds für Windows/macOS/Linux werden an dasselbe Release gehängt.
 
 ## Abgleich (Kurzfassung)
 

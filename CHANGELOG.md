@@ -1,5 +1,7 @@
 # Changelog
 
+For versions after v0.3.1, the changes are listed on the [releases page](https://github.com/Flotomat/TheGuildRegistrar/releases) (generated from the commit messages).
+
 ## v0.3.1 (2026-11-24)
 
 - The companion app is now called **Peasant** (files `TheGuildRegistrar-Peasant-<system>.zip` / `TheGuildRegistrar-Peasant(.exe)`, source folder `peasant/`). Settings and the saved bot token are kept - just replace the old program with the new one.

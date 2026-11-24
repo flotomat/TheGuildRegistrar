@@ -54,7 +54,12 @@ Only Discord display names and role names are exported - no user IDs, no message
 - `TheGuildRegistrar.toc` and the Lua folders in the repository root form the addon. The matching core (`Matching/`, `Data/Import.lua`) is plain Lua 5.1 without WoW API.
 - `peasant/` is the Go source of Peasant, the helper app (no external dependencies): `cd peasant && go test ./... && go run .`
 - Import format: [docs/import-format.md](docs/import-format.md)
-- Releases: pushing a tag `vX.Y.Z` builds the addon zip (CurseForge + GitHub) and Peasant for all platforms (see `.github/workflows/release.yml`).
+- Releases are automatic: every push to `main` runs the checks, derives the next version from the commit messages since the last tag, tags it and builds the addon zip (CurseForge + GitHub) and Peasant for all platforms. The release notes are generated from the same commit messages.
+  - `feat!: ...` or `BREAKING CHANGE:` in the body - new major version (`A`.0.0)
+  - `feat: ...` - new feature (x.`B`.0)
+  - `fix:`, `docs:`, `ui:`, `style:`, `perf:`, `refactor:`, `l10n:` or no prefix - fix / small change (x.x.`C`)
+  - `ci:`, `build:`, `chore:`, `test:` - no release on their own
+  - A scope is optional: `feat(peasant): ...`. One push = one release, the highest level wins. Pushing a tag `vX.Y.Z` by hand still works (see `.github/workflows/version.yml` and `release.yml`).
 
 ## License and notice
 

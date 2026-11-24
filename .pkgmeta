@@ -5,7 +5,7 @@ package-as: TheGuildRegistrar
 enable-nolib-creation: no
 
 manual-changelog:
-  filename: CHANGELOG.md
+  filename: RELEASE_NOTES.md
   markup-type: markdown
 
 ignore:
@@ -14,6 +14,7 @@ ignore:
   - PLAN.md
   - README.md
   - CHANGELOG.md
+  - RELEASE_NOTES.md
   - .vscode
   - .editorconfig
   - .luarc.json
