@@ -7,6 +7,10 @@
 --   - its rank name is one of the configured twink ranks (settings.twinkByRank), or
 --   - one of its notes matches a twink pattern (settings.twinkByNote).
 -- Patterns are simple templates such as "twink von {main}" or plain keywords such as "twink".
+-- Officer decisions override the detection:
+--   decisions.twinkOf[charFullName] = mainFullName  -> twink of that main (c.manualTwink)
+--   decisions.markedMain[charFullName] = true        -> never a twink (c.manualMain)
+-- c.detectedTwink / c.noteMainChar keep what the guild data says, so differences can be reported.
 
 local _, ns = ...
 
@@ -112,15 +116,21 @@ end
 
 -- Build players from roster characters.
 -- Returns list of players: { id, main = char, chars = {...}, twinks = {...}, orphan = bool }
-function Players.build(chars, settings)
+function Players.build(chars, settings, decisions)
+    local twinkOf = decisions and decisions.twinkOf or {}
+    local markedMain = decisions and decisions.markedMain or {}
     local stopset = Text.wordSet(settings.stopwords)
     local twinkRankSet = Text.wordSet(settings.twinkRankNames)
     local patterns = Players.compilePatterns(settings.twinkPatterns)
 
-    local byKey = {}
+    local byKey, byFull = {}, {}
     for _, c in ipairs(chars) do
         c.forms = Text.forms(c.name)
         c.isTwink, c.twinkRefs, c.mainChar, c.twinkReason = false, nil, nil, nil
+        c.detectedTwink, c.noteMainChar, c.manualTwink, c.manualMain, c.player = false, nil, nil, nil, nil
+        if c.fullName then
+            byFull[c.fullName] = c
+        end
         byKey[c.forms.a] = byKey[c.forms.a] or c
         byKey[c.forms.g] = byKey[c.forms.g] or c
         -- note tokens for matching
@@ -137,9 +147,11 @@ function Players.build(chars, settings)
         local isTwink, refs = inspectTwink(c, settings, patterns, twinkRankSet, stopset)
         c.isTwink = isTwink
         c.twinkRefs = refs
+        c.detectedTwink = isTwink
+        c.detectedReason = c.twinkReason
     end
 
-    -- resolve main characters
+    -- resolve main characters (as the guild data says)
     for _, c in ipairs(chars) do
         if c.isTwink then
             for _, ref in ipairs(c.twinkRefs) do
@@ -159,14 +171,33 @@ function Players.build(chars, settings)
                     end
                 end
             end
+            c.noteMainChar = c.mainChar
         end
     end
 
+    -- officer decisions
+    for _, c in ipairs(chars) do
+        local target = c.fullName and twinkOf[c.fullName] and byFull[twinkOf[c.fullName]]
+        if markedMain[c.fullName or ""] then
+            c.isTwink, c.mainChar, c.twinkReason = false, nil, nil
+            c.manualMain = true
+        elseif target and target ~= c then
+            c.isTwink = true
+            c.mainChar = target
+            c.twinkReason = c.twinkReason or "manual"
+            c.manualTwink = true
+        end
+    end
+
+    -- follow twink -> main links; on a cycle (A twink of B, B twink of A) the character stays on its own
     local function root(c)
-        local cur, steps = c, 0
-        while cur.isTwink and cur.mainChar and steps < 6 do
+        local cur, seen = c, { [c] = true }
+        while cur.isTwink and cur.mainChar do
+            if seen[cur.mainChar] then
+                return c
+            end
             cur = cur.mainChar
-            steps = steps + 1
+            seen[cur] = true
         end
         return cur
     end

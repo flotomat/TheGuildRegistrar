@@ -1,5 +1,5 @@
 -- The Guild Registrar - lightweight popup menu (independent of Blizzard's dropdown APIs)
--- items = { { text, func, disabled, isTitle, submenu = { items } } }
+-- items = { { text, func, disabled, isTitle, submenu = { items }, tooltip, tooltipTitle } }
 
 local _, ns = ...
 
@@ -39,6 +39,18 @@ local function create()
         b.text:SetPoint("LEFT", 4, 0)
         b.text:SetPoint("RIGHT", -4, 0)
         b.text:SetJustifyH("LEFT")
+        b:SetScript("OnEnter", function(self)
+            local item = self.item
+            if item and item.tooltip then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(item.tooltipTitle or item.text or "", 1, 1, 1)
+                GameTooltip:AddLine(item.tooltip, 1, 0.82, 0, true)
+                GameTooltip:Show()
+            end
+        end)
+        b:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
         b:SetScript("OnClick", function(self)
             local item = self.item
             if not item or item.disabled or item.isTitle then
@@ -58,6 +70,7 @@ local function create()
 end
 
 function Menu.Close()
+    GameTooltip:Hide()
     if blocker then
         blocker:Hide()
     end
@@ -93,7 +106,7 @@ function Menu.Open(items, anchor)
             else
                 b.text:SetTextColor(1, 1, 1)
             end
-            b:EnableMouse(not item.isTitle)
+            b:EnableMouse(not item.isTitle or item.tooltip ~= nil)
             width = math.max(width, b.text:GetStringWidth() + 24)
             b:Show()
         else

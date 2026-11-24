@@ -87,7 +87,7 @@ local function create(parent)
             end
         end)
     end)
-    W.Tooltip(deleteBtn, L.IMPORT_DELETE, L.IMPORT_DELETE_TOOLTIP)
+    W.Tooltip(deleteBtn, L.IMPORT_DELETE, W.LocText("IMPORT_DELETE_TOOLTIP"))
     f.deleteBtn = deleteBtn
 
     local deleteAllBtn = W.Button(side, L.IMPORT_DELETE_ALL, 260, 24, function()
@@ -95,7 +95,7 @@ local function create(parent)
             f.result:SetText("|cff44ff44" .. string.format(L.IMPORT_DELETED_ALL, n) .. "|r")
         end)
     end)
-    W.Tooltip(deleteAllBtn, L.IMPORT_DELETE_ALL, L.IMPORT_DELETE_ALL_TOOLTIP)
+    W.Tooltip(deleteAllBtn, L.IMPORT_DELETE_ALL, W.LocText("IMPORT_DELETE_ALL_TOOLTIP"))
     f.deleteAllBtn = deleteAllBtn
 
     local stored = W.Label(side, "", "GameFontHighlightSmall")

@@ -1,6 +1,6 @@
 # Plan & Stand: „The Guild Registrar“
 
-Stand: 2026-11-24 · Status: **v0.2.0 veröffentlicht (GitHub), bereit für Tests**
+Stand: 2026-11-24 · Status: **v0.3.0 veröffentlicht (GitHub), bereit für Tests**
 
 ## Ziel
 

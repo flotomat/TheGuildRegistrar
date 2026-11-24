@@ -36,7 +36,7 @@ end
 local function create(parent)
     local f = CreateFrame("Frame", nil, parent)
 
-    local intro = W.Label(f, L.RANKS_INTRO, "GameFontHighlight")
+    local intro = W.Localized(W.Label(f, "", "GameFontHighlight"), "RANKS_INTRO")
     intro:SetPoint("TOPLEFT", 8, -8)
     intro:SetWidth(990)
     intro:SetJustifyV("TOP")
@@ -125,7 +125,7 @@ local function create(parent)
     local rx = 580
     local rightTitle = W.Label(f, L.RANKS_GUILD_RANKS, "GameFontNormalLarge")
     rightTitle:SetPoint("TOPLEFT", rx, -56)
-    local headTwink = W.Label(f, L.RANKS_COL_TWINK, "GameFontNormalSmall")
+    local headTwink = W.Localized(W.Label(f, "", "GameFontNormalSmall"), "RANKS_COL_TWINK")
     headTwink:SetPoint("TOPLEFT", rx + 4, -82)
 
     f.rankChecks = {}
@@ -168,7 +168,8 @@ local function create(parent)
             s.acceptTwinkRanks = checked
             rerun()
         end
-    end, L.RANKS_ACCEPT_TWINK_TOOLTIP)
+    end, W.LocText("RANKS_ACCEPT_TWINK_TOOLTIP"))
+    W.Localized(f.acceptTwink.label, "RANKS_ACCEPT_TWINK")
     f.acceptTwink:SetPoint("TOPLEFT", f.minCycle, "BOTTOMLEFT", 0, -10)
 
     function f.Update()

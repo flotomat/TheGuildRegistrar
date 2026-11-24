@@ -27,6 +27,7 @@ Data\Import.lua
 Matching\Players.lua
 Matching\Matcher.lua
 Matching\Ranks.lua
+Matching\Advice.lua
 Core\Defaults.lua
 Core\Demo.lua
 
@@ -34,6 +35,7 @@ Core\Demo.lua
 Core\DB.lua
 Data\Roster.lua
 Data\Notes.lua
+Data\RankChange.lua
 Core\Engine.lua
 
 # User interface

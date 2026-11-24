@@ -44,6 +44,30 @@ function W.Label(parent, text, font)
     return fs
 end
 
+-- Texts that depend on the chosen term for alternative characters ({Alt}/{alt} in the locale)
+-- are registered here and updated by ns.SetAltTerm.
+local localized = {}
+
+-- Register a font string (or button) to show the locale string `key`; returns the object.
+function W.Localized(obj, key)
+    localized[#localized + 1] = { obj = obj, key = key }
+    obj:SetText(ns.L[key])
+    return obj
+end
+
+function W.RefreshLocalized()
+    for _, e in ipairs(localized) do
+        e.obj:SetText(ns.L[e.key])
+    end
+end
+
+-- Returns a function that reads the locale string `key` when called (for tooltips).
+function W.LocText(key)
+    return function()
+        return ns.L[key]
+    end
+end
+
 function W.Button(parent, text, width, height, onClick)
     local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
     b:SetSize(width or 120, height or 22)
@@ -72,17 +96,22 @@ function W.Check(parent, text, onClick, tooltip)
         end)
     end
     if tooltip then
-        W.Tooltip(cb, text, tooltip)
+        W.Tooltip(cb, function()
+            return label:GetText()
+        end, tooltip)
     end
     return cb
 end
 
+-- title and text may be strings or functions returning strings (evaluated on hover).
 function W.Tooltip(frame, title, text)
     frame:HookScript("OnEnter", function(self)
+        local t = type(title) == "function" and title() or title
+        local body = type(text) == "function" and text() or text
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(title or "", 1, 1, 1)
-        if text then
-            GameTooltip:AddLine(text, nil, nil, nil, true)
+        GameTooltip:SetText(t or "", 1, 1, 1)
+        if body then
+            GameTooltip:AddLine(body, nil, nil, nil, true)
         end
         GameTooltip:Show()
     end)

@@ -61,6 +61,8 @@ local function ensureDecisions(g)
     d.rejected = d.rejected or {}
     d.ignoredDiscord = d.ignoredDiscord or {}
     d.ignoredChars = d.ignoredChars or {}
+    d.twinkOf = d.twinkOf or {}       -- [charFullName] = mainFullName (alt assigned by an officer)
+    d.markedMain = d.markedMain or {} -- [charFullName] = true (never an alt)
 end
 
 -- Data of the current guild (created on first use).
@@ -85,6 +87,7 @@ function DB.Guild()
     end
     g.settings = Util.fillDefaults(g.settings or {}, ns.DEFAULT_SETTINGS)
     ensureDecisions(g)
+    ns.SetAltTerm(g.settings.altTerm)
     return g, key
 end
 
@@ -104,6 +107,7 @@ function DB.ClearDecisions(which)
         g.decisions.ignoredDiscord, g.decisions.ignoredChars = {}, {}
     else
         g.decisions.confirmed, g.decisions.rejected = {}, {}
+        g.decisions.twinkOf, g.decisions.markedMain = {}, {}
     end
 end
 

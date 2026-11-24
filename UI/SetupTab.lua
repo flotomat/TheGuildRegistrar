@@ -28,7 +28,7 @@ local function create(parent)
         { title = L.SETUP_STEP2_TITLE, text = L.SETUP_STEP2_TEXT, link = ns.LINKS.portal },
         { title = L.SETUP_STEP3_TITLE, text = L.SETUP_STEP3_TEXT },
         { title = L.SETUP_STEP4_TITLE, text = L.SETUP_STEP4_TEXT },
-        { title = L.SETUP_STEP5_TITLE, text = L.SETUP_STEP5_TEXT },
+        { title = L.SETUP_STEP5_TITLE, text = L.SETUP_STEP5_TEXT, key = "SETUP_STEP5_TEXT" },
     }
     for i, s in ipairs(steps) do
         local num = W.Label(f, tostring(i), "GameFontNormalHuge")
@@ -36,6 +36,9 @@ local function create(parent)
         local title = W.Label(f, s.title, "GameFontNormalLarge")
         title:SetPoint("TOPLEFT", 48, y)
         local text = W.Label(f, s.text, "GameFontHighlight")
+        if s.key then
+            W.Localized(text, s.key)
+        end
         text:SetPoint("TOPLEFT", 48, y - 22)
         text:SetWidth(940)
         text:SetJustifyV("TOP")

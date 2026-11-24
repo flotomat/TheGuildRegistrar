@@ -58,9 +58,10 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 
 ## 6. Addon einstellen
 
-- **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
-- **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Twink-Muster, ignorierte Wörter, Schwellwerte.
-- Im Tab **Abgleich** per Rechtsklick Zuordnungen bestätigen, ablehnen oder ändern, Spieler anflüstern oder Gildennotizen schreiben.
+- **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-/Alt-Ränge markieren.
+- **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Bezeichnung „Twinks“ oder „Alts“, Twink-Muster, Notiz-Vorlagen und optionale Notiz-Prüfung, ignorierte Wörter, Schwellwerte.
+- Im Tab **Abgleich** zeigt die Spalte *Anpassen* (und der Tooltip), was zu ändern ist: Gildenrang, Twink-Kennzeichnung, Gildennotiz, Zuordnung, Discord-Name. Per Rechtsklick Zuordnungen bestätigen, ablehnen oder ändern, Charaktere als Twink eines Mains zuordnen, Spieler anflüstern oder einen Notiz-Vorschlag kopieren. Ein Klick auf **+** klappt die Twinks eines Spielers aus.
+- Gildennotizen schreiben und Gildenränge ändern behält WoW: Forever dem Blizzard-Interface vor - das erledigst du im Gildenfenster. Im Addon sind diese Menüpunkte ausgegraut.
 
 ## Datenschutz
 

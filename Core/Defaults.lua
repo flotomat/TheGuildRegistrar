@@ -3,10 +3,27 @@
 
 local _, ns = ...
 
+-- Game actions the addon could perform, but which Blizzard reserves for its own UI.
+-- WoW: Forever (1.60.x) blocks addons from writing guild notes (C_GuildInfo.SetNote - refused
+-- even on a direct click, "blocked from an action only available to the Blizzard UI") and from
+-- changing guild ranks (C_GuildInfo.Promote/Demote are #protected, SetGuildRankOrder carries the
+-- same restriction as SetNote). The code stays in Data/Notes.lua and Data/RankChange.lua; the
+-- menu entries are shown greyed out. Set a flag to true only if a client allows it again.
+ns.FEATURES = {
+    writeNotes = false,
+    changeRank = false,
+}
+
 ns.DEFAULT_SETTINGS = {
     -- which guild notes are read
     useNote = true,
     useOfficerNote = true,
+
+    -- what alternative characters are called in the addon: "twink" | "alt"
+    altTerm = (ns.activeLocale == "deDE") and "twink" or "alt",
+
+    -- check that the guild note contains the expected text (note templates below): "officer" | "public" | "off"
+    noteCheck = "officer",
 
     -- optional naming rule for Discord display names, e.g. "Nickname | Main character"
     nameRule = {
@@ -74,7 +91,7 @@ ns.DEFAULT_SETTINGS = {
     rankCheckMinStatus = "likely", -- "sure" | "likely" | "unlikely"
     acceptTwinkRanks = true,
 
-    -- writing notes (always only on request + confirmation)
+    -- note templates: used for suggestions, the note check and (if allowed) writing notes
     noteTemplate = "DC: {discord}",
     twinkNoteTemplate = "Twink {main}",
     noteWriteMode = "append", -- "append" | "replace"

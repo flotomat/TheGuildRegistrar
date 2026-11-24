@@ -58,9 +58,10 @@ To update the list later: start the app → **Export to clipboard** → paste in
 
 ## 6. Configure the addon
 
-- **Ranks tab**: assign each Discord role to the guild rank it stands for, mark guest roles (e.g. *Guest*) and twink ranks.
-- **Options tab**: naming rule (e.g. `Nickname | Main`), which notes to use, twink patterns, ignored words, thresholds.
-- In the **Comparison** tab, right-click entries to confirm, reject or reassign matches, whisper players or write guild notes.
+- **Ranks tab**: assign each Discord role to the guild rank it stands for, mark guest roles (e.g. *Guest*) and twink/alt ranks.
+- **Options tab**: naming rule (e.g. `Nickname | Main`), which notes to use, whether alts are called "Twinks" or "Alts", alt patterns, note templates and the optional note check, ignored words, thresholds.
+- In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Right-click entries to confirm, reject or reassign matches, assign a character as alt of a main, whisper players or copy a note suggestion. Click **+** to show the alts of a player.
+- Writing guild notes and changing guild ranks is reserved for the Blizzard UI in WoW: Forever, so do this in the guild window. The addon shows these menu entries greyed out.
 
 ## Privacy
 

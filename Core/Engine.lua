@@ -81,13 +81,14 @@ function Engine.Run()
     state.canViewOfficer = ns.Roster.CanViewOfficerNote()
     notifyUI()
 
+    ns.SetAltTerm(g.settings.altTerm)
     local settings = ns.Util.copy(g.settings)
     if not state.canViewOfficer then
         settings.useOfficerNote = false
     end
 
     runAsync(function()
-        local players = ns.Players.build(roster, settings)
+        local players = ns.Players.build(roster, settings, g.decisions)
         coroutine.yield()
         local res = ns.Matcher.run({
             members = g.import.members,
@@ -102,6 +103,11 @@ function Engine.Run()
             twinkRankNames = g.settings.twinkRankNames,
             acceptTwinkRanks = g.settings.acceptTwinkRanks,
             minStatus = g.settings.rankCheckMinStatus,
+        })
+        res.summary.withAdvice = ns.Advice.evaluate(res.rows, {
+            settings = settings,
+            rankNames = state.rankNames,
+            members = res.members,
         })
         res.rosterCount = #roster
         return res
@@ -265,6 +271,70 @@ function Engine.SetIgnoredChar(charFullName, ignored)
         d.ignoredChars[charFullName] = ignored or nil
         Engine.Run()
     end
+end
+
+-- Alts -----------------------------------------------------------------------
+
+-- Find a character of the last run by full name.
+function Engine.FindChar(fullName)
+    local res = state.results
+    for _, row in ipairs(res and res.rows or {}) do
+        for _, c in ipairs(ns.Advice.rowChars(row)) do
+            if c.fullName == fullName then
+                return c
+            end
+        end
+    end
+    return nil
+end
+
+-- Make `charFullName` an alt of the player that `mainFullName` belongs to.
+-- Returns false, errorKey if that would put a player under itself.
+function Engine.SetAltOf(charFullName, mainFullName)
+    local d = decisions()
+    if not d then
+        return false
+    end
+    local c, target = Engine.FindChar(charFullName), Engine.FindChar(mainFullName)
+    if not c or not target then
+        return false, "ALT_ERR_NOT_FOUND"
+    end
+    -- always point to the main of the target's player
+    local main = (target.player and target.player.main) or target
+    if main == c then
+        return false, "ALT_ERR_SELF"
+    end
+    d.twinkOf[charFullName] = main.fullName
+    d.markedMain[charFullName] = nil
+    Engine.Run()
+    return true
+end
+
+-- Mark a character as main: removes a manual alt assignment and overrides alt detection.
+function Engine.MarkMain(charFullName)
+    local d = decisions()
+    if not d then
+        return
+    end
+    d.twinkOf[charFullName] = nil
+    d.markedMain[charFullName] = true
+    Engine.Run()
+end
+
+-- Remove manual alt/main decisions of a character (back to automatic detection).
+function Engine.ResetAltDecision(charFullName)
+    local d = decisions()
+    if not d then
+        return
+    end
+    d.twinkOf[charFullName] = nil
+    d.markedMain[charFullName] = nil
+    Engine.Run()
+end
+
+function Engine.HasAltDecision(charFullName)
+    local d = decisions()
+    return d and (d.twinkOf[charFullName] or d.markedMain[charFullName]) and true or false
 end
 
 function Engine.HasDecision(memberKey)

@@ -1,4 +1,8 @@
 -- The Guild Registrar - write guild notes (only ever on explicit request + confirmation)
+--
+-- WoW: Forever refuses C_GuildInfo.SetNote for addons, even on a direct click ("blocked from an
+-- action only available to the Blizzard UI"). The menu entry is therefore shown greyed out while
+-- ns.FEATURES.writeNotes is false. The code is kept for clients that allow it.
 
 local _, ns = ...
 
@@ -12,6 +16,10 @@ local function call(tbl, fname, ...)
         return true, tbl[fname](...)
     end
     return false
+end
+
+function Notes.IsAvailable()
+    return ns.FEATURES.writeNotes and true or false
 end
 
 function Notes.CanEdit(kind)
@@ -58,6 +66,9 @@ end
 -- Write a note. kind = "public" | "officer". Returns ok, errorKey.
 function Notes.Write(char, kind, text)
     text = ns.Util.utf8truncate(text, Notes.MAX_BYTES)
+    if not Notes.IsAvailable() then
+        return false, "NOTE_ERR_BLOCKED"
+    end
     if not Notes.CanEdit(kind) then
         return false, "NOTE_ERR_PERMISSION"
     end

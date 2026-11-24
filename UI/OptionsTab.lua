@@ -14,8 +14,9 @@ local function rerun()
     ns.Engine.Run()
 end
 
-local function section(f, text, x, y)
-    local fs = W.Label(f, text, "GameFontNormalLarge")
+-- Section title; `key` is a locale key (kept up to date when the alt term changes).
+local function section(f, key, x, y)
+    local fs = W.Localized(W.Label(f, "", "GameFontNormalLarge"), key)
     fs:SetPoint("TOPLEFT", x, y)
     return fs
 end
@@ -29,7 +30,7 @@ local function create(parent)
     local y = -6
 
     -- notes ---------------------------------------------------------------------------
-    section(f, L.OPT_SECTION_NOTES, x1, y)
+    section(f, "OPT_SECTION_NOTES", x1, y)
     controls.useNote = W.Check(f, L.OPT_USE_NOTE, function(_, v)
         settings().useNote = v
         rerun()
@@ -43,7 +44,7 @@ local function create(parent)
 
     -- naming rule ------------------------------------------------------------------------
     y = y - 60
-    section(f, L.OPT_SECTION_RULE, x1, y)
+    section(f, "OPT_SECTION_RULE", x1, y)
     controls.ruleEnabled = W.Check(f, L.OPT_RULE_ENABLED, function(_, v)
         settings().nameRule.enabled = v
         rerun()
@@ -81,21 +82,37 @@ local function create(parent)
 
     -- twinks ---------------------------------------------------------------------------
     y = y - 96
-    section(f, L.OPT_SECTION_TWINKS, x1, y)
+    section(f, "OPT_SECTION_TWINKS", x1, y)
     controls.twinkByRank = W.Check(f, L.OPT_TWINK_BY_RANK, function(_, v)
         settings().twinkByRank = v
         rerun()
-    end, L.OPT_TWINK_BY_RANK_TOOLTIP)
+    end, W.LocText("OPT_TWINK_BY_RANK_TOOLTIP"))
     controls.twinkByRank:SetPoint("TOPLEFT", x1, y - 22)
     controls.twinkByNote = W.Check(f, L.OPT_TWINK_BY_NOTE, function(_, v)
         settings().twinkByNote = v
         rerun()
-    end, L.OPT_TWINK_BY_NOTE_TOOLTIP)
+    end, W.LocText("OPT_TWINK_BY_NOTE_TOOLTIP"))
     controls.twinkByNote:SetPoint("TOPLEFT", x1 + 230, y - 22)
+
+    -- what alts are called in the addon
+    local termLabel = W.Label(f, L.OPT_ALT_TERM, "GameFontHighlight")
+    termLabel:SetPoint("TOPLEFT", x1 + 230, y - 2)
+    controls.altTerm = W.Cycle(f, 100, {
+        { value = "twink", text = L.OPT_ALT_TERM_TWINK },
+        { value = "alt", text = L.OPT_ALT_TERM_ALT },
+    }, function()
+        local s = settings()
+        return s and s.altTerm or "twink"
+    end, function(v)
+        settings().altTerm = v
+        ns.SetAltTerm(v)
+        rerun()
+    end)
+    controls.altTerm:SetPoint("LEFT", termLabel, "RIGHT", 8, 0)
 
     -- thresholds ---------------------------------------------------------------------
     y = y - 60
-    section(f, L.OPT_SECTION_THRESHOLDS, x1, y)
+    section(f, "OPT_SECTION_THRESHOLDS", x1, y)
     local thFields = {
         { key = "sure", label = L.STATUS_SURE },
         { key = "likely", label = L.STATUS_LIKELY },
@@ -132,7 +149,7 @@ local function create(parent)
 
     -- note templates --------------------------------------------------------------
     y = y - 120
-    section(f, L.OPT_SECTION_WRITE, x1, y)
+    section(f, "OPT_SECTION_WRITE", x1, y)
     local t1 = W.Label(f, L.OPT_NOTE_TEMPLATE, "GameFontHighlight")
     t1:SetPoint("TOPLEFT", x1 + 4, y - 28)
     controls.noteTemplate = W.EditBox(f, 200, 20)
@@ -140,13 +157,17 @@ local function create(parent)
     controls.noteTemplate:SetScript("OnEditFocusLost", function(self)
         settings().noteTemplate = self:GetText()
     end)
-    local t2 = W.Label(f, L.OPT_TWINK_NOTE_TEMPLATE, "GameFontHighlight")
+    local t2 = W.Localized(W.Label(f, "", "GameFontHighlight"), "OPT_TWINK_NOTE_TEMPLATE")
     t2:SetPoint("TOPLEFT", x1 + 4, y - 54)
     controls.twinkNoteTemplate = W.EditBox(f, 200, 20)
     controls.twinkNoteTemplate:SetPoint("TOPLEFT", x1 + 180, y - 50)
     controls.twinkNoteTemplate:SetScript("OnEditFocusLost", function(self)
         settings().twinkNoteTemplate = self:GetText()
     end)
+    controls.noteTemplate:HookScript("OnEditFocusLost", rerun)
+    controls.twinkNoteTemplate:HookScript("OnEditFocusLost", rerun)
+
+    -- default write mode: only useful while writing notes is allowed (see ns.FEATURES)
     local t3 = W.Label(f, L.OPT_NOTE_MODE, "GameFontHighlight")
     t3:SetPoint("TOPLEFT", x1 + 4, y - 80)
     controls.noteMode = W.Cycle(f, 160, {
@@ -159,15 +180,39 @@ local function create(parent)
         settings().noteWriteMode = v
     end)
     controls.noteMode:SetPoint("TOPLEFT", x1 + 180, y - 76)
-    local phHint = W.Label(f, L.OPT_PLACEHOLDERS, "GameFontDisableSmall")
+
+    -- note check (in place of the write mode while writing is blocked)
+    local t4 = W.Label(f, L.OPT_NOTE_CHECK, "GameFontHighlight")
+    t4:SetPoint("TOPLEFT", x1 + 4, y - 80)
+    controls.noteCheck = W.Cycle(f, 160, {
+        { value = "officer", text = L.OPT_NOTE_CHECK_OFFICER },
+        { value = "public", text = L.OPT_NOTE_CHECK_PUBLIC },
+        { value = "off", text = L.OPT_NOTE_CHECK_OFF },
+    }, function()
+        local s = settings()
+        return s and s.noteCheck or "officer"
+    end, function(v)
+        settings().noteCheck = v
+        rerun()
+    end)
+    controls.noteCheck:SetPoint("TOPLEFT", x1 + 180, y - 76)
+    W.Tooltip(controls.noteCheck, L.OPT_NOTE_CHECK, W.LocText("OPT_NOTE_CHECK_TOOLTIP"))
+    if ns.Notes.IsAvailable() then
+        t4:Hide()
+        controls.noteCheck:Hide()
+    else
+        t3:Hide()
+        controls.noteMode:Hide()
+    end
+    local phHint = W.Localized(W.Label(f, "", "GameFontDisableSmall"), "OPT_PLACEHOLDERS")
     phHint:SetPoint("TOPLEFT", x1 + 4, y - 104)
     phHint:SetWidth(480)
     phHint:SetJustifyV("TOP")
 
     -- right column: lists ----------------------------------------------------------------
     local ry = -6
-    section(f, L.OPT_TWINK_PATTERNS, x2, ry)
-    local pHint = W.Label(f, L.OPT_TWINK_PATTERNS_HINT, "GameFontDisableSmall")
+    section(f, "OPT_TWINK_PATTERNS", x2, ry)
+    local pHint = W.Localized(W.Label(f, "", "GameFontDisableSmall"), "OPT_TWINK_PATTERNS_HINT")
     pHint:SetPoint("TOPLEFT", x2, ry - 22)
     pHint:SetWidth(480)
     pHint:SetJustifyV("TOP")
@@ -176,7 +221,7 @@ local function create(parent)
     controls.patterns = pEdit
 
     ry = ry - 216
-    section(f, L.OPT_STOPWORDS, x2, ry)
+    section(f, "OPT_STOPWORDS", x2, ry)
     local sHint = W.Label(f, L.OPT_STOPWORDS_HINT, "GameFontDisableSmall")
     sHint:SetPoint("TOPLEFT", x2, ry - 22)
     sHint:SetWidth(480)
@@ -244,6 +289,8 @@ local function create(parent)
         controls.noteTemplate:SetText(s.noteTemplate or "")
         controls.twinkNoteTemplate:SetText(s.twinkNoteTemplate or "")
         controls.noteMode.Refresh()
+        controls.noteCheck.Refresh()
+        controls.altTerm.Refresh()
         controls.patterns:SetText(ns.Util.listToLines(s.twinkPatterns))
         controls.stopwords:SetText(table.concat(s.stopwords or {}, ", "))
     end

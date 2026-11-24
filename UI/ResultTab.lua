@@ -1,4 +1,7 @@
 -- The Guild Registrar - "Results" tab: filterable list of all assignments
+--
+-- Each Discord member / guild player is one row. Players with alts get a [+] button at the left;
+-- it unfolds the alts as indented child rows below the main.
 
 local _, ns = ...
 
@@ -7,18 +10,115 @@ local W = ns.W
 local Matcher = ns.Matcher
 
 local COLUMNS = {
-    { key = "status", title = "COL_STATUS", width = 120 },
-    { key = "discord", title = "COL_DISCORD", width = 210 },
-    { key = "char", title = "COL_CHARACTER", width = 200 },
-    { key = "notes", title = "COL_NOTES", width = 200 },
-    { key = "rank", title = "COL_RANK", width = 140 },
-    { key = "hints", title = "COL_HINTS", width = 110 },
+    { key = "expand", title = "", width = 22 },
+    { key = "status", title = "COL_STATUS", width = 110 },
+    { key = "discord", title = "COL_DISCORD", width = 190 },
+    { key = "char", title = "COL_CHARACTER", width = 190 },
+    { key = "notes", title = "COL_NOTES", width = 170 },
+    { key = "rank", title = "COL_RANK", width = 145 },
+    { key = "hints", title = "COL_HINTS", width = 163 },
 }
 
 local ROW_HEIGHT = 20
+local INDENT = 18
+
+-- folded players (by player id). Everything is unfolded whenever the window opens; the officer
+-- folds the players already checked.
+local collapsed = {}
 
 local function filters()
     return ns.db.ui.filters
+end
+
+local function settings()
+    local g = ns.DB.Guild()
+    return g and g.settings or ns.DEFAULT_SETTINGS
+end
+
+-- Characters ------------------------------------------------------------------------
+
+-- Alts shown below a row: all characters of the row except the main.
+local function altChars(row)
+    local list = {}
+    if not row.player then
+        return list
+    end
+    for _, c in ipairs(ns.Advice.rowChars(row)) do
+        if c ~= row.player.main then
+            list[#list + 1] = c
+        end
+    end
+    return list
+end
+
+local function rowKey(row)
+    return row.player and row.player.id or nil
+end
+
+local function isOpen(row)
+    local key = rowKey(row)
+    return not (key and collapsed[key])
+end
+
+-- Advice texts ------------------------------------------------------------------------
+
+local function adviceText(e)
+    local code = e.code
+    local key = "ADV_" .. code
+    if code == "ALT_MARK" then
+        key = "ADV_ALT_MARK_" .. (e.method or "note"):upper()
+        return string.format(L[key], e.a or "?", e.note or "")
+    elseif code == "MAIN_MARK" then
+        key = (e.method == "rank") and "ADV_MAIN_MARK_RANK" or "ADV_MAIN_MARK_NOTE"
+    elseif code == "ORPHAN" and e.a then
+        key = "ADV_ORPHAN_REF"
+    elseif code == "NOTE_EXPECTED" then
+        key = (e.method == "officer") and "ADV_NOTE_EXPECTED_OFFICER" or "ADV_NOTE_EXPECTED_PUBLIC"
+    end
+    return string.format(L[key], tostring(e.a or "?"), tostring(e.b or "?"))
+end
+
+local function adviceShort(e)
+    return L["ADV_SHORT_" .. e.code]
+end
+
+-- All advice entries of a row: { { entry, char or nil } }
+local function rowAdvice(row)
+    local list = {}
+    for _, e in ipairs(row.advice or {}) do
+        list[#list + 1] = { e = e }
+    end
+    for _, c in ipairs(ns.Advice.rowChars(row)) do
+        for _, e in ipairs(c.advice or {}) do
+            list[#list + 1] = { e = e, char = c }
+        end
+    end
+    return list
+end
+
+local function shortList(entries)
+    local seen, out = {}, {}
+    for _, item in ipairs(entries) do
+        local s = adviceShort(item.e or item)
+        if not seen[s] then
+            seen[s] = true
+            out[#out + 1] = s
+        end
+    end
+    return table.concat(out, ", ")
+end
+
+-- Full hint texts of a row (used by export); alts are prefixed with their name.
+local function hintList(row)
+    local list = {}
+    for _, item in ipairs(rowAdvice(row)) do
+        local t = adviceText(item.e)
+        if item.char and row.player and item.char ~= row.player.main then
+            t = item.char.name .. ": " .. t
+        end
+        list[#list + 1] = t
+    end
+    return list
 end
 
 -- Text helpers -------------------------------------------------------------------
@@ -35,26 +135,23 @@ local function charText(c)
     return name
 end
 
-local function playerText(p, extras)
+local function playerText(row)
+    local p = row.player
     if not p then
         return "|cff777777-|r"
     end
     local s = charText(p.main)
-    local twinkCount = #p.twinks
-    for _, ex in ipairs(extras or {}) do
-        twinkCount = twinkCount + #ex.player.chars
-    end
-    if twinkCount > 0 then
-        s = s .. string.format(" |cff999999(+%d)|r", twinkCount)
+    local n = #altChars(row)
+    if n > 0 then
+        s = s .. string.format(" |cff999999(+%d)|r", n)
     end
     return s
 end
 
-local function notesText(p)
-    if not p then
+local function notesText(c)
+    if not c then
         return ""
     end
-    local c = p.main
     local parts = {}
     if c.note and c.note ~= "" then
         parts[#parts + 1] = c.note
@@ -65,44 +162,43 @@ local function notesText(p)
     return table.concat(parts, " · ")
 end
 
-local function rankText(row)
-    local r = row.rank
-    if not r then
-        if row.player then
-            return "|cff999999" .. (row.player.main.rankName or "") .. "|r"
+local function rankIssue(row, c)
+    if row.rank and row.rank.state == "mismatch" then
+        for _, issue in ipairs(row.rank.issues) do
+            if issue.char == c then
+                return issue
+            end
         end
-        return ""
     end
-    if r.state == "ok" then
-        return W.ICON_OK .. " " .. (row.player.main.rankName or "")
-    elseif r.state == "mismatch" then
-        local expectedName = ns.state.rankNames[r.expected] or ("#" .. r.expected)
-        return W.ICON_BAD .. " " .. (row.player.main.rankName or "?") .. " -> " .. expectedName
-    elseif r.state == "unmapped" then
-        return W.ICON_UNKNOWN .. " " .. (row.player.main.rankName or "")
-    end
-    return "|cff999999" .. (row.player.main.rankName or "") .. "|r"
+    return nil
 end
 
-local function hintList(row)
-    local list = {}
-    local fl = row.flags
-    if fl.ruleFormat then
-        list[#list + 1] = L.HINT_RULE_FORMAT
+-- Rank column for one character of a row.
+local function charRankText(row, c)
+    local r = row.rank
+    local name = c.rankName or ""
+    if not r or r.state == "skipped" then
+        return "|cff999999" .. name .. "|r"
     end
-    if fl.ruleReversed then
-        list[#list + 1] = L.HINT_RULE_REVERSED
+    if rankIssue(row, c) then
+        local expectedName = ns.state.rankNames[r.expected] or ("#" .. r.expected)
+        return W.ICON_BAD .. " " .. name .. " -> " .. expectedName
+    elseif r.state == "unmapped" then
+        return W.ICON_UNKNOWN .. " " .. name
     end
-    if fl.guestInGuild then
-        list[#list + 1] = L.HINT_GUEST_IN_GUILD
+    return W.ICON_OK .. " " .. name
+end
+
+local function rankText(row)
+    if not row.player then
+        return ""
     end
-    if fl.orphanTwink then
-        list[#list + 1] = L.HINT_ORPHAN_TWINK
+    local s = charRankText(row, row.player.main)
+    -- the main is fine, but alts are not
+    if row.rank and row.rank.state == "mismatch" and not rankIssue(row, row.player.main) then
+        s = s .. string.format(" |cffff6666(%d %s)|r", #row.rank.issues, L.TOOLTIP_TWINK)
     end
-    if fl.confirmedMissing then
-        list[#list + 1] = string.format(L.HINT_CONFIRMED_MISSING, fl.confirmedMissing)
-    end
-    return list
+    return s
 end
 
 local function sideText(row)
@@ -114,33 +210,44 @@ local function sideText(row)
     return nil
 end
 
+local function altReasonText(c)
+    if c.manualTwink then
+        return L.TOOLTIP_ALT_REASON_MANUAL
+    elseif c.twinkReason == "rank" then
+        return L.TOOLTIP_ALT_REASON_RANK
+    elseif c.twinkReason == "note" then
+        return L.TOOLTIP_ALT_REASON_NOTE
+    end
+    return nil
+end
+
 -- Filtering and sorting --------------------------------------------------------------
+
+local function charMatches(c, needle)
+    local text = ns.Text.lower(table.concat({ c.name, c.note or "", c.officerNote or "" }, " "))
+    return text:find(needle, 1, true) ~= nil
+end
 
 local function matchesSearch(row, needle)
     if needle == "" then
         return true
     end
-    local hay = {}
     if row.member then
-        hay[#hay + 1] = row.member.display
-        hay[#hay + 1] = table.concat(row.member.roles, " ")
-    end
-    if row.player then
-        for _, c in ipairs(row.player.chars) do
-            hay[#hay + 1] = c.name
-            hay[#hay + 1] = c.note or ""
-            hay[#hay + 1] = c.officerNote or ""
+        local text = ns.Text.lower(row.member.display .. " " .. table.concat(row.member.roles, " "))
+        if text:find(needle, 1, true) then
+            return true
         end
     end
-    local text = ns.Text.lower(table.concat(hay, " "))
-    return text:find(needle, 1, true) ~= nil
+    for _, c in ipairs(ns.Advice.rowChars(row)) do
+        if charMatches(c, needle) then
+            return true
+        end
+    end
+    return false
 end
 
 local function isOnline(row)
-    if not row.player then
-        return false
-    end
-    for _, c in ipairs(row.player.chars) do
+    for _, c in ipairs(ns.Advice.rowChars(row)) do
         if c.online then
             return true
         end
@@ -162,7 +269,7 @@ local function sortValue(row, key)
         local order = { mismatch = 1, unmapped = 2, ok = 3, skipped = 4 }
         return r and order[r.state] or 5
     elseif key == "hints" then
-        return -#hintList(row)
+        return -#rowAdvice(row)
     end
     return 0
 end
@@ -183,7 +290,7 @@ local function filteredRows()
         if ok and f.rankMismatch and not (row.rank and row.rank.state == "mismatch") then
             ok = false
         end
-        if ok and f.ruleIssues and #hintList(row) == 0 then
+        if ok and f.ruleIssues and not row.hasAdvice then
             ok = false
         end
         if ok and f.onlineOnly and not isOnline(row) then
@@ -197,6 +304,9 @@ local function filteredRows()
         end
     end
     local key, asc = f.sortKey or "status", f.sortAsc ~= false
+    if key == "expand" then
+        key = "status"
+    end
     ns.Util.stableSort(out, function(a, b)
         local va, vb = sortValue(a, key), sortValue(b, key)
         if va == vb then
@@ -211,7 +321,29 @@ local function filteredRows()
         end
         return va > vb
     end)
-    return out
+
+    -- insert unfolded alts below their main (a search that hits an alt unfolds it, too)
+    local items = {}
+    for _, row in ipairs(out) do
+        items[#items + 1] = row
+        local alts = altChars(row)
+        if #alts > 0 then
+            local open = isOpen(row)
+            if not open and needle ~= "" then
+                for _, c in ipairs(alts) do
+                    if charMatches(c, needle) then
+                        open = true
+                    end
+                end
+            end
+            if open then
+                for _, c in ipairs(alts) do
+                    items[#items + 1] = { kind = "child", row = row, char = c }
+                end
+            end
+        end
+    end
+    return items, out
 end
 
 -- Tooltip ----------------------------------------------------------------------------
@@ -225,7 +357,33 @@ local function reasonText(r)
     return string.format(L.REASON_FORMAT, r.word or "?", src, r.target or "?", kind, r.value * 100)
 end
 
-local function showTooltip(owner, row)
+local function addCharLines(c, label)
+    GameTooltip:AddDoubleLine(label .. ": " .. charText(c) .. string.format(" |cffaaaaaa(%s)|r", c.level or "?"),
+        c.rankName or "", 1, 1, 1, 0.8, 0.8, 0.8)
+    if c.note and c.note ~= "" then
+        GameTooltip:AddLine("   " .. L.NOTE_PUBLIC .. ": " .. c.note, 0.9, 0.9, 0.9, true)
+    end
+    if c.officerNote and c.officerNote ~= "" then
+        GameTooltip:AddLine("   " .. L.NOTE_OFFICER .. ": " .. c.officerNote, 0.55, 0.7, 1, true)
+    end
+end
+
+local function addAdviceLines(entries, row)
+    if #entries == 0 then
+        return
+    end
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine(L.TOOLTIP_ADVICE, 1, 0.82, 0)
+    for _, item in ipairs(entries) do
+        local t = adviceText(item.e)
+        if item.char and row and row.player and item.char ~= row.player.main then
+            t = item.char.name .. ": " .. t
+        end
+        GameTooltip:AddLine("- " .. t, 1, 0.7, 0.3, true)
+    end
+end
+
+local function showRowTooltip(owner, row)
     GameTooltip:SetOwner(owner, "ANCHOR_CURSOR_RIGHT")
     GameTooltip:AddLine(statusText(row.status) .. (row.score and string.format("  |cffaaaaaa%d%%|r", row.score * 100) or ""))
     local side = sideText(row)
@@ -241,25 +399,8 @@ local function showTooltip(owner, row)
     end
     if row.player then
         GameTooltip:AddLine(" ")
-        local chars = {}
-        for _, c in ipairs(row.player.chars) do
-            chars[#chars + 1] = c
-        end
-        for _, ex in ipairs(row.extras or {}) do
-            for _, c in ipairs(ex.player.chars) do
-                chars[#chars + 1] = c
-            end
-        end
-        for _, c in ipairs(chars) do
-            local label = (c == row.player.main) and L.TOOLTIP_MAIN or L.TOOLTIP_TWINK
-            GameTooltip:AddDoubleLine(label .. ": " .. charText(c) .. string.format(" |cffaaaaaa(%s)|r", c.level or "?"),
-                c.rankName or "", 1, 1, 1, 0.8, 0.8, 0.8)
-            if c.note and c.note ~= "" then
-                GameTooltip:AddLine("   " .. L.NOTE_PUBLIC .. ": " .. c.note, 0.9, 0.9, 0.9, true)
-            end
-            if c.officerNote and c.officerNote ~= "" then
-                GameTooltip:AddLine("   " .. L.NOTE_OFFICER .. ": " .. c.officerNote, 0.55, 0.7, 1, true)
-            end
+        for _, c in ipairs(ns.Advice.rowChars(row)) do
+            addCharLines(c, (c == row.player.main) and L.TOOLTIP_MAIN or L.TOOLTIP_TWINK)
         end
     end
     if row.reasons then
@@ -288,13 +429,7 @@ local function showTooltip(owner, row)
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(L.TOOLTIP_RANK_UNMAPPED, 0.7, 0.7, 0.7, true)
     end
-    local hints = hintList(row)
-    if #hints > 0 then
-        GameTooltip:AddLine(" ")
-        for _, h in ipairs(hints) do
-            GameTooltip:AddLine("- " .. h, 1, 0.7, 0.3, true)
-        end
-    end
+    addAdviceLines(rowAdvice(row), row)
     if #row.alternatives > 0 then
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(L.TOOLTIP_ALTERNATIVES, 1, 0.82, 0)
@@ -303,6 +438,32 @@ local function showTooltip(owner, row)
             GameTooltip:AddDoubleLine("  " .. name, string.format("%d%%", alt.score * 100), 0.9, 0.9, 0.9, 0.7, 0.7, 0.7)
         end
     end
+    GameTooltip:AddLine(" ")
+    if #altChars(row) > 0 then
+        GameTooltip:AddLine(L.TOOLTIP_EXPAND, 0.5, 0.5, 0.5, true)
+    end
+    GameTooltip:AddLine(L.TOOLTIP_RIGHTCLICK, 0.5, 0.5, 0.5)
+    GameTooltip:Show()
+end
+
+local function showChildTooltip(owner, item)
+    local row, c = item.row, item.char
+    GameTooltip:SetOwner(owner, "ANCHOR_CURSOR_RIGHT")
+    addCharLines(c, L.TOOLTIP_TWINK)
+    local main = row.player and row.player.main
+    if main then
+        local reason = altReasonText(c)
+        GameTooltip:AddLine(string.format(L.TOOLTIP_ALT_OF, main.name) .. (reason and (" (" .. reason .. ")") or ""),
+            0.8, 0.8, 0.8, true)
+    end
+    if row.member then
+        GameTooltip:AddDoubleLine(L.COL_DISCORD, row.member.display, 0.6, 0.8, 1, 1, 1, 1)
+    end
+    local entries = {}
+    for _, e in ipairs(c.advice or {}) do
+        entries[#entries + 1] = { e = e }
+    end
+    addAdviceLines(entries)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L.TOOLTIP_RIGHTCLICK, 0.5, 0.5, 0.5)
     GameTooltip:Show()
@@ -319,7 +480,112 @@ local function whisper(name)
     end
 end
 
-local function contextMenu(row)
+local function assignAlt(c, mainFullName)
+    local ok, err = ns.Engine.SetAltOf(c.fullName, mainFullName)
+    if ok then
+        local target = ns.Engine.FindChar(mainFullName)
+        ns.Engine.Print(string.format(L.ALT_ASSIGNED, c.name, target and target.name or mainFullName))
+    elseif err then
+        ns.Engine.Print(L[err])
+    end
+end
+
+-- Find a character of the current results by (short or full) name.
+local function findCharByName(name)
+    local res = ns.state.results
+    local key = ns.Text.key(name)
+    for _, r in ipairs(res and res.rows or {}) do
+        for _, c in ipairs(ns.Advice.rowChars(r)) do
+            if ns.Text.key(c.name) == key or ns.Text.key(c.fullName) == key then
+                return c
+            end
+        end
+    end
+    return nil
+end
+
+-- Actions for one guild character (main or alt).
+local function addCharActions(items, row, c)
+    local E = ns.Engine
+
+    if row.status ~= "ignored" then
+        -- assign as alt of another player
+        local sub = { { text = L.MENU_SET_ALT, isTitle = true } }
+        if c.player then
+            for _, sug in ipairs(ns.Advice.altSuggestions(c.player, 0)) do
+                if #sub < 7 then
+                    sub[#sub + 1] = { text = string.format(L.MENU_ALT_SUGGESTION, sug.player.main.name, sug.member.display),
+                        func = function()
+                            assignAlt(c, sug.player.main.fullName)
+                        end }
+                end
+            end
+        end
+        sub[#sub + 1] = { text = L.MENU_SET_ALT_BY_NAME, func = function()
+            ns.Dialogs.ShowInput(L.MENU_SET_ALT_BY_NAME, string.format(L.ALT_BY_NAME_LABEL, c.name), "", function(name)
+                local target = findCharByName(name)
+                if target then
+                    assignAlt(c, target.fullName)
+                else
+                    E.Print(string.format(L.ASSIGN_NOT_FOUND, name))
+                end
+            end)
+        end }
+        items[#items + 1] = { text = L.MENU_SET_ALT, submenu = sub }
+
+        if c.isTwink then
+            items[#items + 1] = { text = L.MENU_MARK_MAIN, func = function()
+                E.MarkMain(c.fullName)
+            end }
+        end
+        if E.HasAltDecision(c.fullName) then
+            items[#items + 1] = { text = L.MENU_RESET_ALT, func = function()
+                E.ResetAltDecision(c.fullName)
+            end }
+        end
+    end
+
+    -- guild rank (blocked by Blizzard in WoW: Forever -> greyed out)
+    if ns.RankChange.IsAvailable() then
+        local sub = { { text = L.MENU_SET_RANK, isTitle = true } }
+        for rank, rankName in ipairs(ns.state.rankNames or {}) do
+            local allowed = ns.RankChange.CanSet(c, rank)
+            sub[#sub + 1] = { text = string.format("%d. %s", rank, rankName), disabled = not allowed, func = function()
+                ns.Dialogs.ShowConfirm(L.MENU_SET_RANK, string.format(L.RANK_CONFIRM, c.name, c.rankName or "?", rankName), function()
+                    local ok, err = ns.RankChange.Set(c, rank)
+                    E.Print(ok and string.format(L.RANK_CHANGED, c.name) or L[err])
+                    if ok then
+                        E.Refresh()
+                    end
+                end)
+            end }
+        end
+        items[#items + 1] = { text = L.MENU_SET_RANK, submenu = sub }
+    else
+        items[#items + 1] = { text = L.MENU_SET_RANK, disabled = true, tooltip = L.BLOCKED_BY_BLIZZARD }
+    end
+
+    -- guild note (blocked by Blizzard in WoW: Forever -> greyed out; a suggestion can be copied)
+    if ns.Notes.IsAvailable() then
+        items[#items + 1] = { text = L.MENU_WRITE_NOTE, func = function()
+            ns.Dialogs.ShowWriteNote(row, c)
+        end }
+    else
+        items[#items + 1] = { text = L.MENU_WRITE_NOTE, disabled = true, tooltip = L.BLOCKED_BY_BLIZZARD }
+    end
+    local suggestion = ns.Advice.suggestedNote(row, c, settings())
+    if suggestion and suggestion ~= "" then
+        items[#items + 1] = { text = L.MENU_COPY_NOTE, func = function()
+            ns.Dialogs.ShowCopy(L.MENU_COPY_NOTE, suggestion, L.COPY_NOTE_HINT)
+        end }
+    end
+
+    items[#items + 1] = { text = L.MENU_WHISPER .. (c.online and (" " .. W.ICON_ONLINE) or ""), func = function()
+        whisper(c.fullName)
+    end }
+end
+
+local function rowMenu(row)
     local E = ns.Engine
     local items = {}
     local m, p = row.member, row.player
@@ -356,19 +622,12 @@ local function contextMenu(row)
     if m and row.status ~= "ignored" then
         items[#items + 1] = { text = L.MENU_ASSIGN_BY_NAME, func = function()
             ns.Dialogs.ShowInput(L.MENU_ASSIGN_BY_NAME, string.format(L.ASSIGN_BY_NAME_LABEL, m.display), "", function(name)
-                local res = ns.state.results
-                local key = ns.Text.key(name)
-                for _, r in ipairs(res and res.rows or {}) do
-                    if r.player then
-                        for _, c in ipairs(r.player.chars) do
-                            if ns.Text.key(c.name) == key or ns.Text.key(c.fullName) == key then
-                                E.Confirm(m.key, c.fullName)
-                                return
-                            end
-                        end
-                    end
+                local c = findCharByName(name)
+                if c then
+                    E.Confirm(m.key, c.fullName)
+                else
+                    E.Print(string.format(L.ASSIGN_NOT_FOUND, name))
                 end
-                ns.Engine.Print(string.format(L.ASSIGN_NOT_FOUND, name))
             end)
         end }
     end
@@ -391,47 +650,27 @@ local function contextMenu(row)
         end }
     end
 
-    -- notes, whisper, copy
+    -- the main character (alts have their own menu in their rows)
     if p then
-        local chars = {}
-        for _, c in ipairs(p.chars) do
-            chars[#chars + 1] = c
-        end
-        for _, ex in ipairs(row.extras or {}) do
-            for _, c in ipairs(ex.player.chars) do
-                chars[#chars + 1] = c
-            end
-        end
-        local noteSub = { { text = L.MENU_WRITE_NOTE, isTitle = true } }
-        local whisperSub = { { text = L.MENU_WHISPER, isTitle = true } }
-        for _, c in ipairs(chars) do
-            noteSub[#noteSub + 1] = { text = c.name, func = function()
-                ns.Dialogs.ShowWriteNote(row, c)
-            end }
-            whisperSub[#whisperSub + 1] = { text = c.name .. (c.online and (" " .. W.ICON_ONLINE) or ""), func = function()
-                whisper(c.fullName)
-            end }
-        end
-        if #chars == 1 then
-            items[#items + 1] = { text = L.MENU_WRITE_NOTE, func = noteSub[2].func }
-            items[#items + 1] = { text = L.MENU_WHISPER, func = whisperSub[2].func }
-        else
-            items[#items + 1] = { text = L.MENU_WRITE_NOTE, submenu = noteSub }
-            items[#items + 1] = { text = L.MENU_WHISPER, submenu = whisperSub }
-        end
+        addCharActions(items, row, p.main)
     end
     items[#items + 1] = { text = L.MENU_COPY_NAMES, func = function()
         local lines = {}
         if m then
             lines[#lines + 1] = m.display
         end
-        if p then
-            for _, c in ipairs(p.chars) do
-                lines[#lines + 1] = c.name
-            end
+        for _, c in ipairs(ns.Advice.rowChars(row)) do
+            lines[#lines + 1] = c.name
         end
         ns.Dialogs.ShowCopy(L.MENU_COPY_NAMES, table.concat(lines, "\n"))
     end }
+    items[#items + 1] = { text = CLOSE or "Close" }
+    ns.Menu.Open(items)
+end
+
+local function childMenu(item)
+    local items = { { text = item.char.name, isTitle = true } }
+    addCharActions(items, item.row, item.char)
     items[#items + 1] = { text = CLOSE or "Close" }
     ns.Menu.Open(items)
 end
@@ -449,9 +688,10 @@ local function exportText(rows, namesOnly)
                 row.member and row.member.display or "-",
                 row.player and row.player.main.name or "-",
             }
-            if row.player and #row.player.twinks > 0 then
+            local alts = altChars(row)
+            if #alts > 0 then
                 local tw = {}
-                for _, c in ipairs(row.player.twinks) do
+                for _, c in ipairs(alts) do
                     tw[#tw + 1] = c.name
                 end
                 parts[3] = parts[3] .. " (+" .. table.concat(tw, ", ") .. ")"
@@ -462,7 +702,7 @@ local function exportText(rows, namesOnly)
             end
             local hints = hintList(row)
             if #hints > 0 then
-                parts[#parts + 1] = table.concat(hints, ", ")
+                parts[#parts + 1] = table.concat(hints, "; ")
             end
             lines[#lines + 1] = table.concat(parts, " | ")
         end
@@ -471,6 +711,8 @@ local function exportText(rows, namesOnly)
 end
 
 -- Layout ---------------------------------------------------------------------------------
+
+local onToggle -- set in create()
 
 local function createRow(list, i)
     local row = CreateFrame("Button", nil, list)
@@ -481,8 +723,30 @@ local function createRow(list, i)
     local hl = row:CreateTexture(nil, "HIGHLIGHT")
     hl:SetAllPoints()
     hl:SetColorTexture(0.3, 0.5, 0.9, 0.25)
+
+    -- [+] / [-] button to unfold the alts
+    local toggle = CreateFrame("Button", nil, row)
+    toggle:SetSize(18, 18)
+    toggle:SetPoint("LEFT", 2, 0)
+    toggle.text = toggle:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    toggle.text:SetPoint("CENTER")
+    local thl = toggle:CreateTexture(nil, "HIGHLIGHT")
+    thl:SetAllPoints()
+    thl:SetColorTexture(1, 1, 1, 0.15)
+    toggle:SetScript("OnClick", function()
+        local data = row.data
+        if data and data.kind ~= "child" then
+            local key = rowKey(data)
+            collapsed[key] = not collapsed[key] or nil
+            onToggle()
+        end
+    end)
+    W.Tooltip(toggle, W.LocText("TOOLTIP_EXPAND"))
+    row.toggle = toggle
+
     row.cols = {}
     local x = 4
+    row.colX = {}
     for c, col in ipairs(COLUMNS) do
         local fs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         fs:SetPoint("LEFT", x, 0)
@@ -490,35 +754,79 @@ local function createRow(list, i)
         fs:SetJustifyH("LEFT")
         fs:SetWordWrap(false)
         row.cols[c] = fs
+        row.colX[c] = x
         x = x + col.width
     end
     row:SetScript("OnEnter", function(self)
-        if self.data then
-            showTooltip(self, self.data)
+        local data = self.data
+        if data then
+            if data.kind == "child" then
+                showChildTooltip(self, data)
+            else
+                showRowTooltip(self, data)
+            end
         end
     end)
     row:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     row:SetScript("OnClick", function(self, button)
-        if self.data and button == "RightButton" then
+        local data = self.data
+        if data and button == "RightButton" then
             GameTooltip:Hide()
-            contextMenu(self.data)
+            if data.kind == "child" then
+                childMenu(data)
+            else
+                rowMenu(data)
+            end
         end
     end)
     return row
 end
 
+local function setIndent(row, indent)
+    for c, fs in ipairs(row.cols) do
+        fs:ClearAllPoints()
+        fs:SetPoint("LEFT", row.colX[c] + indent, 0)
+        local w = COLUMNS[c].width - 8
+        if c == #row.cols then
+            w = w - indent
+        end
+        fs:SetWidth(w)
+    end
+end
+
 local function updateRow(row, data)
     row.data = data
-    row.cols[1]:SetText(statusText(data.status) .. (data.score and data.status ~= "confirmed"
+    if data.kind == "child" then
+        local parent, c = data.row, data.char
+        setIndent(row, INDENT)
+        row.toggle:Hide()
+        row.cols[1]:SetText("")
+        row.cols[2]:SetText("|cff999999" .. L.TOOLTIP_TWINK .. "|r")
+        row.cols[3]:SetText("")
+        row.cols[4]:SetText(charText(c) .. string.format(" |cff888888%s|r", c.level or ""))
+        row.cols[5]:SetText(notesText(c))
+        row.cols[6]:SetText(charRankText(parent, c))
+        row.cols[7]:SetText(#(c.advice or {}) > 0 and ("|cffffaa44" .. shortList(c.advice) .. "|r") or "")
+        return
+    end
+    setIndent(row, 0)
+    if #altChars(data) > 0 then
+        row.toggle.text:SetText(isOpen(data) and "-" or "+")
+        row.toggle:Show()
+    else
+        row.toggle:Hide()
+    end
+    row.cols[1]:SetText("")
+    row.cols[2]:SetText(statusText(data.status) .. (data.score and data.status ~= "confirmed"
         and string.format(" |cff888888%d%%|r", data.score * 100) or ""))
-    row.cols[2]:SetText(data.member and data.member.display or ("|cff777777" .. L.SIDE_NO_DISCORD .. "|r"))
-    row.cols[3]:SetText(data.player and playerText(data.player, data.extras) or ("|cff777777" .. L.SIDE_NO_CHAR .. "|r"))
-    row.cols[4]:SetText(notesText(data.player))
-    row.cols[5]:SetText(rankText(data))
-    local hints = hintList(data)
-    row.cols[6]:SetText(#hints > 0 and ("|cffffaa44" .. table.concat(hints, ", ") .. "|r") or "")
+    row.cols[3]:SetText(data.member and data.member.display or ("|cff777777" .. L.SIDE_NO_DISCORD .. "|r"))
+    row.cols[4]:SetText(data.player and playerText(data) or ("|cff777777" .. L.SIDE_NO_CHAR .. "|r"))
+    row.cols[5]:SetText(notesText(data.player and data.player.main))
+    row.cols[6]:SetText(rankText(data))
+    local adv = rowAdvice(data)
+    row.cols[7]:SetText(#adv > 0 and ("|cffffaa44" .. shortList(adv) .. "|r") or "")
 end
 
 local function create(parent)
@@ -606,14 +914,33 @@ local function create(parent)
         local hl = b:CreateTexture(nil, "HIGHLIGHT")
         hl:SetAllPoints()
         hl:SetColorTexture(1, 1, 1, 0.08)
-        b:SetScript("OnClick", function()
-            if fl.sortKey == col.key then
-                fl.sortAsc = not fl.sortAsc
-            else
-                fl.sortKey, fl.sortAsc = col.key, true
-            end
-            f.Update()
-        end)
+        if col.key == "expand" then
+            -- unfold / fold all
+            b:SetScript("OnClick", function()
+                local anyClosed = false
+                for _, row in ipairs(f.parentRows or {}) do
+                    if #altChars(row) > 0 and not isOpen(row) then
+                        anyClosed = true
+                    end
+                end
+                for _, row in ipairs(f.parentRows or {}) do
+                    if #altChars(row) > 0 then
+                        collapsed[rowKey(row)] = (not anyClosed) or nil
+                    end
+                end
+                f.Update()
+            end)
+            W.Tooltip(b, W.LocText("TOOLTIP_EXPAND_ALL"))
+        else
+            b:SetScript("OnClick", function()
+                if fl.sortKey == col.key then
+                    fl.sortAsc = not fl.sortAsc
+                else
+                    fl.sortKey, fl.sortAsc = col.key, true
+                end
+                f.Update()
+            end)
+        end
         f.headerButtons[#f.headerButtons + 1] = b
         hx = hx + col.width
     end
@@ -640,12 +967,12 @@ local function create(parent)
     refresh:SetPoint("BOTTOMLEFT", 2, 4)
 
     local export = W.Button(f, L.BTN_EXPORT, 170, 24, function()
-        ns.Dialogs.ShowCopy(L.BTN_EXPORT, exportText(f.rows or {}, false))
+        ns.Dialogs.ShowCopy(L.BTN_EXPORT, exportText(f.parentRows or {}, false))
     end)
     export:SetPoint("LEFT", refresh, "RIGHT", 8, 0)
 
     local exportNames = W.Button(f, L.BTN_EXPORT_NAMES, 170, 24, function()
-        ns.Dialogs.ShowCopy(L.BTN_EXPORT_NAMES, exportText(f.rows or {}, true))
+        ns.Dialogs.ShowCopy(L.BTN_EXPORT_NAMES, exportText(f.parentRows or {}, true))
     end)
     exportNames:SetPoint("LEFT", export, "RIGHT", 8, 0)
 
@@ -669,20 +996,26 @@ local function create(parent)
     function f.Update()
         local state = ns.state
         for _, b in ipairs(f.headerButtons) do
-            local arrow = ""
-            if fl.sortKey == b.col.key then
-                arrow = fl.sortAsc and " (+)" or " (-)"
+            if b.col.key == "expand" then
+                b.text:SetText("+")
+            else
+                local arrow = ""
+                if fl.sortKey == b.col.key then
+                    arrow = fl.sortAsc and " (+)" or " (-)"
+                end
+                b.text:SetText(L[b.col.title] .. arrow)
             end
-            b.text:SetText(L[b.col.title] .. arrow)
         end
-        local rows = filteredRows()
-        f.rows = rows
-        list:SetItems(rows)
+        hintCb.label:SetText(L.FILTER_HINTS)
+        local items, rows = filteredRows()
+        f.rows = items
+        f.parentRows = rows or {}
+        list:SetItems(items)
         if state.running then
             f.empty:SetText(L.STATUS_RUNNING)
         elseif state.error then
             f.empty:SetText(L[state.error])
-        elseif state.results and #rows == 0 then
+        elseif state.results and #items == 0 then
             f.empty:SetText(L.RESULTS_EMPTY_FILTER)
         else
             f.empty:SetText("")
@@ -699,12 +1032,26 @@ local function create(parent)
                     .. string.format(" (%d %s, %d %s)", s.discordOnly, L.SUMMARY_DISCORD_ONLY, s.wowOnly, L.SUMMARY_WOW_ONLY),
                 W.Colorize(s.guest .. " " .. L.STATUS_GUEST, W.STATUS_COLORS.guest),
                 string.format("|cffff6666%d %s|r", res.rankStats and res.rankStats.mismatch or 0, L.SUMMARY_RANK_MISMATCH),
-                string.format("|cffffaa44%d %s|r", s.ruleIssues, L.SUMMARY_RULE_ISSUES),
+                string.format("|cffffaa44%d %s|r", s.withAdvice or 0, L.SUMMARY_RULE_ISSUES),
             }
-            f.summary:SetText(table.concat(parts, "   ") .. string.format("   |cff888888(%s: %d)|r", L.SUMMARY_SHOWN, #rows))
+            f.summary:SetText(table.concat(parts, "   ") .. string.format("   |cff888888(%s: %d)|r", L.SUMMARY_SHOWN, #(rows or {})))
         else
             f.summary:SetText("")
         end
+    end
+    onToggle = f.Update
+
+    -- unfold everything whenever the main window is opened
+    local main = _G.TheGuildRegistrarFrame
+    if main then
+        main:HookScript("OnShow", function()
+            for k in pairs(collapsed) do
+                collapsed[k] = nil
+            end
+            if f:IsShown() then
+                f.Update()
+            end
+        end)
     end
     return f
 end
