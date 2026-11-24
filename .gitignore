@@ -1,0 +1,20 @@
+# Visual Studio / IDEs
+.vs/
+.idea/
+*.user
+
+# Build output
+dist/
+companion/TheGuildRegistrar-Companion*
+companion/*.exe
+.release/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Never commit tokens or exports
+*.token
+token.dpapi
+last-export.txt
+.env

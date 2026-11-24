@@ -1,0 +1,72 @@
+# Release: push a tag like v1.0.0 -> addon zip to CurseForge + GitHub release, companion builds attached.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  addon:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Package addon and upload (CurseForge + GitHub release)
+        uses: BigWigsMods/packager@v2
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+  companion:
+    needs: addon
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Test
+        working-directory: companion
+        run: go test ./...
+
+      - name: Build
+        working-directory: companion
+        env:
+          CGO_ENABLED: "0"
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -e
+          mkdir -p ../dist
+          build() {
+            local os=$1 arch=$2 label=$3 ext=$4
+            local dir="TheGuildRegistrar-Companion-${label}"
+            mkdir -p "$dir"
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$dir/TheGuildRegistrar-Companion${ext}" .
+            cp ../LICENSE "$dir/"
+            cp ../docs/companion-readme.txt "$dir/README.txt"
+            if [ "$os" = "linux" ]; then
+              tar -czf "../dist/${dir}.tar.gz" "$dir"
+            else
+              zip -qr "../dist/${dir}.zip" "$dir"
+            fi
+            rm -rf "$dir"
+          }
+          build windows amd64 windows-x64 .exe
+          build darwin arm64 macos-apple-silicon ""
+          build darwin amd64 macos-intel ""
+          build linux amd64 linux-x64 ""
+          ls -la ../dist
+
+      - name: Attach to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/*

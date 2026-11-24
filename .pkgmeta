@@ -1,0 +1,20 @@
+# Packaging for CurseForge / GitHub releases (BigWigsMods/packager)
+# The addon lives in the repository root; everything else is excluded from the addon zip.
+package-as: TheGuildRegistrar
+
+enable-nolib-creation: no
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - companion
+  - docs
+  - PLAN.md
+  - README.md
+  - CHANGELOG.md
+  - .vscode
+  - .editorconfig
+  - .luarc.json
+  - .gitattributes

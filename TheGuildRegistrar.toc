@@ -1,0 +1,50 @@
+## Interface: 16001
+## Title: The Guild Registrar
+## Notes: Compares your Discord member list with your guild roster and shows who is missing or unassigned.
+## Notes-deDE: Gleicht die Mitgliederliste eures Discord-Servers mit der Gildenliste ab und zeigt, wer fehlt oder nicht zugeordnet ist.
+## Author: Flotomat
+## Version: @project-version@
+## SavedVariables: TheGuildRegistrarDB
+## IconTexture: Interface\Icons\INV_Misc_Note_05
+## AddonCompartmentFunc: TheGuildRegistrar_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: TheGuildRegistrar_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: TheGuildRegistrar_OnAddonCompartmentLeave
+## X-License: GPL-3.0-or-later
+## X-Website: https://github.com/Flotomat/TheGuildRegistrar
+## Category: Guild
+
+# Localization (add new languages here, see Locales/README.md)
+Locales\Locales.lua
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\Apply.lua
+
+# Pure Lua core (no WoW API, testable outside the game)
+Core\Util.lua
+Matching\Text.lua
+Matching\Similarity.lua
+Data\Import.lua
+Matching\Players.lua
+Matching\Matcher.lua
+Matching\Ranks.lua
+Core\Defaults.lua
+Core\Demo.lua
+
+# Game integration
+Core\DB.lua
+Data\Roster.lua
+Data\Notes.lua
+Core\Engine.lua
+
+# User interface
+UI\Widgets.lua
+UI\Menu.lua
+UI\Dialogs.lua
+UI\MainFrame.lua
+UI\SetupTab.lua
+UI\ImportTab.lua
+UI\ResultTab.lua
+UI\RanksTab.lua
+UI\OptionsTab.lua
+
+Core\Init.lua

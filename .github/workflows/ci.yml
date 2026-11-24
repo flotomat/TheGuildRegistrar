@@ -1,0 +1,38 @@
+# Checks on every push / pull request: Lua syntax of the addon, tests of the companion.
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  lua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Syntax check (all files listed in the TOC)
+        run: |
+          set -e
+          grep -E '^[A-Za-z].*\.lua' TheGuildRegistrar.toc | tr '\\' '/' | tr -d '\r' | while read -r f; do
+            luac5.1 -p "$f"
+          done
+          echo "OK"
+
+  companion:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Vet and test
+        working-directory: companion
+        run: |
+          go vet ./...
+          go test ./...

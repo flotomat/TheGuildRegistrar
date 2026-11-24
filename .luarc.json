@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.1",
+  "diagnostics.globals": [
+    "TheGuildRegistrarDB",
+    "SLASH_THEGUILDREGISTRAR1",
+    "SLASH_THEGUILDREGISTRAR2",
+    "TheGuildRegistrar_OnAddonCompartmentClick",
+    "TheGuildRegistrar_OnAddonCompartmentEnter",
+    "TheGuildRegistrar_OnAddonCompartmentLeave"
+  ],
+  "workspace.ignoreDir": ["companion", "docs", ".github"]
+}
