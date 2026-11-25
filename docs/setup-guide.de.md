@@ -60,7 +60,7 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 
 ## 6. Addon einstellen
 
-**Ziel: Alles wird automatisch zugeordnet.** Ein Discord-Account kann mehrere Charaktere haben - einen Main und seine Twinks. Das Addon findet sie selbst, wenn die Gildendaten ein paar Regeln folgen:
+**Ziel: Alles wird automatisch zugeordnet.** Ein Discord-Account kann mehrere Charaktere haben - einen Main und seine Twinks/Alts. Das Addon findet sie selbst, wenn die Gildendaten ein paar Regeln folgen:
 
 - der **Discord-Name steht in der Offiziersnotiz** (oder öffentlichen Notiz) des Mains, z. B. `DC: Jens`,
 - **Twinks** haben einen Twink-Rang oder eine Notiz wie `Twink Wurstinator` (ein Twink, dessen Notiz den Discord-Namen nennt, wird ebenfalls gefunden),
@@ -68,7 +68,7 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 
 Welche Notizen gelesen werden, steht im Tab Abgleich über der Liste (*Zuordnung über Charakternamen und: ...*) und lässt sich dort oder im Tab Einstellungen umschalten. Nicht verwendete Notizen werden grau angezeigt. Manuelle Zuweisungen sind der **Ausweichweg** für Einzelfälle (siehe unten) und lassen sich mit anderen Offizieren teilen.
 
-- **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-/Alt-Ränge markieren.
+- **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
 - **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Bezeichnung „Twinks“ oder „Alts“, Twink-Muster, Notiz-Vorlagen und optionale Notiz-Prüfung, ignorierte Wörter, Schwellwerte.
 - Im Tab **Abgleich** zeigt die Spalte *Anpassen* (und der Tooltip), was zu ändern ist: Gildenrang, Twink-Kennzeichnung, Gildennotiz, Zuordnung, Discord-Name. Ein Klick auf **+** klappt die Twinks eines Spielers aus.
 - **Rechtsklick** auf einen Eintrag (oder einen Twink darunter) zeigt alle Aktionen. Was für den Eintrag nicht passt, ist ausgegraut; der Tooltip sagt, warum.

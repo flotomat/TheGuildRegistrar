@@ -1,7 +1,7 @@
 # The Guild Registrar
 
 **A World of Warcraft: Forever addon that compares your Discord member list with your guild roster.**
-It shows who belongs to whom, how certain each match is, who is missing on which side, and whether Discord roles and guild ranks fit together. For every entry it says what should probably be changed - guild rank, alt status, guild note, Discord name or assignment - so officers know exactly what to fix.
+It shows who belongs to whom, how certain each match is, who is missing on which side, and whether Discord roles and guild ranks fit together. For every entry it says what should probably be changed - guild rank, twink/alt status, guild note, Discord name or assignment - so officers know exactly what to fix.
 
 *Deutsch: siehe [unten](#deutsch).*
 
@@ -9,10 +9,10 @@ It shows who belongs to whom, how certain each match is, who is missing on which
 
 ## The idea
 
-**Assignments should happen automatically.** Every Discord account can own several characters: one main and any number of alts. The addon finds them by itself if the guild keeps a few simple rules:
+**Assignments should happen automatically.** Every Discord account can own several characters: one main and any number of twinks. The addon finds them by itself if the guild keeps a few simple rules:
 
 1. Write the **Discord name into the officer note** (or the public note) of the main, e.g. `DC: Jens`.
-2. Mark **alts** by an alt rank or a note such as `Twink Wurstinator` / `alt of Wurstinator`. An alt without such a note is still found if its note names the Discord account.
+2. Mark **twinks** by a twink rank or a note such as `Twink Wurstinator` / `alt of Wurstinator`. A twink without such a note is still found if its note names the Discord account.
 3. Optional: a **naming rule** for Discord names, e.g. `Nickname | Main`.
 
 Which notes are read is shown above the list and can be switched there (public note, officer note, both or none).
@@ -22,16 +22,16 @@ Which notes are read is shown above the list and can be switched there (public n
 ## Features
 
 - **Matching** of Discord display names against character names, public notes and officer notes. Handles umlauts and accents (`Hänge` = `Haenge` = `Hange`), emojis, CamelCase names and missing separators.
-- **One Discord account, several characters**: the main and all alts of a person are listed under one Discord account. Characters that only the Discord name connects (no alt rank or note) are shown as alts with a hint to mark them in the game.
+- **One Discord account, several characters**: the main and all twinks of a person are listed under one Discord account. Characters that only the Discord name connects (no twink rank or note) are shown as twinks with a hint to mark them in the game.
 - **Four levels of certainty**: *certain*, *likely*, *unlikely*, *unassigned*, plus *confirmed* (fixed by an officer), *guest* and *ignored*. "Certain" really means certain: if two candidates are similarly good, the match is downgraded. Results do not change by themselves when the roster is refreshed.
 - **Reasons**: the tooltip explains every match ("Wurstinator" matches character name "Wurstinator", exact, 100%) and lists alternative candidates.
-- **Alts / twinks** are recognized by guild rank (configurable) and/or note text ("Twink von Rolf", "alt of Rolf", ...) and assigned to the same Discord member as their main. Officers can also assign a character as alt of a main by hand or mark it as main. Alts are shown as a tree below their main (click **+**). Whether they are called "Twinks" or "Alts" can be chosen in the options.
-- **Hints what to change** for each player and character: different guild rank, mark as alt in the game, assign to a player, missing in Discord or in the guild, wrong or missing guild note (optional note check against a template), Discord name not following the naming rule.
+- **Twinks** are recognized by guild rank (configurable) and/or note text ("Twink von Rolf", "alt of Rolf", ...) and assigned to the same Discord member as their main. Officers can also assign a character as twink of a main by hand or mark it as main. Twinks are shown as a tree below their main (click **+**). Whether they are called "Twinks" or "Alts" can be chosen in the options.
+- **Hints what to change** for each player and character: different guild rank, mark as twink in the game, assign to a player, missing in Discord or in the guild, wrong or missing guild note (optional note check against a template), Discord name not following the naming rule.
 - **Optional naming rule**, e.g. `Nickname | Main`. Names breaking the rule or with swapped parts get a hint.
 - **Rank check**: map Discord roles to guild ranks; the highest Discord role counts. Mismatches are shown and can be filtered.
 - **Guest roles** (e.g. "Guest") are listed but hidden by default.
 - **Filters & sorting**: by status, side (only in Discord / only in guild), rank mismatch, hints, online, free text search.
-- **Officer actions** (right-click): confirm (fix), remove the confirmation, **separate** a character from a Discord account (fixed ones only after a confirmation), assign another candidate, add a character or a Discord member by name, assign as alt of / mark as main, ignore, whisper, copy names, **copy a note suggestion** to paste into the guild window. The menu always shows every action; actions that do not fit an entry are greyed out and say why.
+- **Officer actions** (right-click): confirm (fix), remove the confirmation, **separate** a character from a Discord account (fixed ones only after a confirmation), assign another candidate, add a character or a Discord member by name, assign as twink of / mark as main, ignore, whisper, copy names, **copy a note suggestion** to paste into the guild window. The menu always shows every action; actions that do not fit an entry are greyed out and say why.
 - **Share assignments** with other officers as a code (Comparison tab), taken over in the Import tab.
 - **Writing guild notes and changing guild ranks** from the addon is not possible: WoW: Forever reserves both for the Blizzard UI. The menu entries are shown greyed out; the hints tell you what to change in the guild window.
 - **Export** of the filtered list, e.g. to post "please update your nickname" in Discord.
@@ -89,7 +89,7 @@ The Guild Registrar is an independent fan project and is not affiliated with, en
 
 **The Guild Registrar** gleicht die Mitgliederliste eures Discord-Servers mit der Gildenliste in WoW: Forever ab. Das Addon zeigt, wer zu wem gehört, wie sicher die Zuordnung ist (*eindeutig*, *wahrscheinlich*, *unwahrscheinlich*, *nicht zugewiesen*), wer auf welcher Seite fehlt und ob Discord-Rollen und Gildenränge zusammenpassen.
 
-**Die Idee:** Zuordnungen sollen automatisch passieren. Ein Discord-Account kann mehrere Charaktere haben - einen Main und beliebig viele Twinks. Das Addon findet sie selbst, wenn die Gilde ein paar einfache Regeln einhält: **Discord-Name in die Offiziersnotiz** (oder öffentliche Notiz) des Mains, z. B. `DC: Jens`; **Twinks** per Twink-Rang oder Notiz wie `Twink Wurstinator` kennzeichnen (ein Twink, dessen Notiz den Discord-Namen nennt, wird ebenfalls gefunden); optional eine **Namensregel** wie `Spitzname | Main`. Welche Notizen gelesen werden, steht über der Liste und lässt sich dort umschalten. **Die manuelle Zuweisung ist der Ausweichweg** für Einzelfälle: per Rechtsklick bestätigen (fest), lösen oder einen Charakter einem Discord-Account hinzufügen. Mit **Zuweisungen teilen** wird daraus ein Code, den andere Offiziere in ihrem Tab Import einfügen - z. B. als Textdatei in Discord.
+**Die Idee:** Zuordnungen sollen automatisch passieren. Ein Discord-Account kann mehrere Charaktere haben - einen Main und beliebig viele Twinks/Alts. Das Addon findet sie selbst, wenn die Gilde ein paar einfache Regeln einhält: **Discord-Name in die Offiziersnotiz** (oder öffentliche Notiz) des Mains, z. B. `DC: Jens`; **Twinks** per Twink-Rang oder Notiz wie `Twink Wurstinator` kennzeichnen (ein Twink, dessen Notiz den Discord-Namen nennt, wird ebenfalls gefunden); optional eine **Namensregel** wie `Spitzname | Main`. Welche Notizen gelesen werden, steht über der Liste und lässt sich dort umschalten. **Die manuelle Zuweisung ist der Ausweichweg** für Einzelfälle: per Rechtsklick bestätigen (fest), lösen oder einen Charakter einem Discord-Account hinzufügen. Mit **Zuweisungen teilen** wird daraus ein Code, den andere Offiziere in ihrem Tab Import einfügen - z. B. als Textdatei in Discord.
 
 - Vergleicht Discord-Anzeigenamen mit Charakternamen, öffentlicher Notiz und Offiziersnotiz (Umlaute, Emojis, CamelCase und fehlende Trennzeichen werden berücksichtigt). Die Ergebnisse ändern sich beim Aktualisieren der Gildenliste nicht von selbst.
 - Erkennt Twinks über Gildenrang und/oder Notiztext und ordnet sie dem Discord-Mitglied des Mains zu. Charaktere lassen sich auch von Hand als Twink eines Mains zuordnen oder als Main markieren. Twinks werden als Baum unter ihrem Main angezeigt (Klick auf **+**); ob sie „Twinks“ oder „Alts“ heißen, ist einstellbar.
