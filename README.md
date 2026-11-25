@@ -57,6 +57,8 @@ Setup takes about 10 minutes and is described step by step in the app, in the ad
 | `/tgr refresh` | reload the roster and compare again |
 | `/tgr wipe` | delete the Discord data of all guilds on this account (with confirmation) |
 
+The addon is also listed in the game under **Options → AddOns**; from there you can open its window or its options.
+
 ## Privacy
 
 Only Discord display names and role names are exported - no user IDs, no messages. The export is not saved to a file; it is gone when you close Peasant. The bot token is stored protected on your PC. All data stays on your computer and in your WoW saved variables; the project has no server and no telemetry. The imported data can be deleted at any time - for the current guild or for all guilds on your account, including guilds you have left (Import tab, or `/tgr wipe`).
@@ -100,7 +102,7 @@ The Guild Registrar is an independent fan project and is not affiliated with, en
 - Manuelle Zuweisungen als Code mit anderen Offizieren teilen.
 - Gildennotizen schreiben und Gildenränge ändern ist per Addon nicht möglich: WoW: Forever behält beides dem Blizzard-Interface vor. Die Menüpunkte sind ausgegraut; die Hinweise sagen, was im Gildenfenster zu ändern ist.
 
-Weil ein Addon nicht ins Internet kann, liest das kleine Hilfsprogramm **Peasant** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein. Weitere Offiziere brauchen keinen eigenen Bot: Der Gildenmeister erzeugt in Peasant einen **Einladungscode** (das mit einem Passwort verschlüsselte Bot-Token), den die Offiziere einlösen.
+Weil ein Addon nicht ins Internet kann, liest das kleine Hilfsprogramm **Peasant** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein (das Fenster lässt sich auch über **Optionen → AddOns** öffnen). Weitere Offiziere brauchen keinen eigenen Bot: Der Gildenmeister erzeugt in Peasant einen **Einladungscode** (das mit einem Passwort verschlüsselte Bot-Token), den die Offiziere einlösen.
 
 **Datenschutz:** Exportiert werden nur Anzeigenamen und Rollennamen, keine IDs. Der Export wird nicht in einer Datei gespeichert, alle Daten bleiben auf deinem PC, es gibt keinen Server und keine Telemetrie. Importierte Daten lassen sich jederzeit löschen - für die aktuelle Gilde oder für alle Gilden deines Accounts, auch verlassene (Tab Import oder `/tgr wipe`). **Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich** (z. B. nach der DSGVO) - bitte informiere deine Mitglieder über den Abgleich. Details: [docs/privacy.md](docs/privacy.md#deutsch).
 

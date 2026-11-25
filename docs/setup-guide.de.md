@@ -51,7 +51,7 @@ Die einmalige Einrichtung dauert etwa 10 Minuten. Du brauchst:
 ## 5. Exportieren und importieren
 
 1. Server auswählen und **In die Zwischenablage exportieren** klicken.
-2. In WoW `/tgr` eingeben, den Tab **Import** öffnen, ins Textfeld klicken, **Strg+V** (Mac: **Cmd+V**) drücken und **Importieren** klicken.
+2. In WoW `/tgr` eingeben (oder über **Optionen → AddOns → The Guild Registrar** öffnen), den Tab **Import** öffnen, ins Textfeld klicken, **Strg+V** (Mac: **Cmd+V**) drücken und **Importieren** klicken.
 3. Der Tab **Abgleich** zeigt das Ergebnis.
 
 Der Export wird **nicht in einer Datei gespeichert**: Er liegt nur in der Zwischenablage und auf der Seite des Programms und ist nach dem Beenden weg.

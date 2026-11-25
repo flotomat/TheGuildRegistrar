@@ -50,5 +50,6 @@ UI\ImportTab.lua
 UI\ResultTab.lua
 UI\RanksTab.lua
 UI\OptionsTab.lua
+UI\SettingsPanel.lua
 
 Core\Init.lua

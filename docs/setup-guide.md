@@ -51,7 +51,7 @@ One-time setup takes about 10 minutes. You need:
 ## 5. Export and import
 
 1. Choose your server and click **Export to clipboard**.
-2. In WoW, type `/tgr`, open the **Import** tab, click into the text field, press **Ctrl+V** (Mac: **Cmd+V**) and click **Import**.
+2. In WoW, type `/tgr` (or open it via **Options → AddOns → The Guild Registrar**), open the **Import** tab, click into the text field, press **Ctrl+V** (Mac: **Cmd+V**) and click **Import**.
 3. The **Comparison** tab shows the result.
 
 The export is **not saved to a file**: it is only in your clipboard and on the app's page and is gone when you close the app.
