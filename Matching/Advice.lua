@@ -94,7 +94,7 @@ local function checkNotesNameOthers(members)
             for _, cand in ipairs(m2.candidates or {}) do
                 local r = cand.noteReason
                 local p = cand.player
-                local owner = p.assigned
+                local owner = p.assigned or p.attachedTo
                 if r and r.kind == "exact" and (r.value or 0) >= 0.8 and owner and owner ~= m2 then
                     -- skip if the note also names the assigned member
                     local ownerNamed = false
@@ -161,6 +161,9 @@ function Advice.evaluate(rows, ctx)
         if fl.confirmedMissing then
             add(ra, { code = "CONFIRMED_MISSING", a = fl.confirmedMissing })
         end
+        if fl.linkMissing then
+            add(ra, { code = "LINK_MISSING", a = fl.linkMissing })
+        end
         if m and p and (row.status == "likely" or row.status == "unlikely") then
             add(ra, { code = "CONFIRM", a = p.main.name })
         end
@@ -196,8 +199,10 @@ function Advice.evaluate(rows, ctx)
             end
             for _, c in ipairs(Advice.rowChars(row)) do
                 local main = mainOf(row, c)
+                -- character of an attached group: only the Discord name connects it to the main
+                local attachedMain = c.player ~= p and c.player and c == c.player.main
                 -- alt (or its main) only known to the addon: mark it in the game
-                if c.manualTwink and main ~= c and (not c.detectedTwink or not c.noteMainChar) then
+                if (c.manualTwink or attachedMain) and main ~= c and (not c.detectedTwink or not c.noteMainChar) then
                     local note = Advice.suggestedNote(row, c, s)
                     local byNote = s.twinkByNote and note ~= nil
                     local byRank = not c.detectedTwink and s.twinkByRank and hasTwinkRank
@@ -215,8 +220,8 @@ function Advice.evaluate(rows, ctx)
                 if c.manualMain and c.detectedTwink then
                     add(c.advice, { code = "MAIN_MARK", method = c.detectedReason or "note" })
                 end
-                -- alt without a known main
-                if c.isTwink and not c.mainChar and c.player and c.player.orphan and c == c.player.main then
+                -- alt without a known main (attached alts get the ALT_MARK hint instead)
+                if c.isTwink and not c.mainChar and c.player and c.player.orphan and c == c.player.main and c == main then
                     add(c.advice, { code = "ORPHAN", a = c.twinkRefs and c.twinkRefs[1] })
                 end
                 -- expected note text

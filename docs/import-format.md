@@ -24,3 +24,28 @@ Rules:
 - Duplicate display names are kept and get an internal suffix (`Name #2`).
 - No IDs are part of the format.
 - New versions of the format get a new header (`#TGR2`, ...). The addon rejects unknown versions with a message asking to update.
+
+## Assignment code `TGRD1`
+
+The Comparison tab (**Share assignments**) turns the manual decisions of an officer into a code that other officers paste into the Import tab. The decisions are merged: shared entries replace own decisions for the same characters, everything else is kept. Same escaping as above.
+
+```
+#TGRD1;2026-11-25T12:00:00Z;My Guild
+L;Wurstinator-Realm;Jens | Wurstinator
+R;Jens | Wurstinator;Heilkraut-Realm
+T;Wurstbrot-Realm;Wurstinator-Realm
+M;Rolfine-Realm
+ID;Besucher Bob
+IC;Ohnediscord-Realm
+```
+
+| Line | Meaning |
+|---|---|
+| `#TGRD1;<created>;<guild>` | header (required) |
+| `L;<character>;<Discord name>` | character fixed to a Discord member (confirmed) |
+| `R;<Discord name>;<character>` | character separated from a Discord member |
+| `T;<character>;<main>` | character is an alt of a main |
+| `M;<character>` | character is a main (never an alt) |
+| `ID;<Discord name>` / `IC;<character>` | Discord member / character ignored |
+
+Characters are full names (`Name-Realm`), Discord names the display names of the Discord export. The code contains Discord names and assignments: only share it with people who may see them.

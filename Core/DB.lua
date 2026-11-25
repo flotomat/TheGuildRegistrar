@@ -5,12 +5,28 @@ local _, ns = ...
 local DB = {}
 ns.DB = DB
 
-DB.VERSION = 1
+DB.VERSION = 2
 
 local Util = ns.Util
 
 -- Migrations from older saved variable versions go here: [fromVersion] = function(db) ... end
-local MIGRATIONS = {}
+local MIGRATIONS = {
+    -- 1 -> 2: a Discord account can own several characters. Confirmations were stored per Discord
+    -- member (confirmed[memberKey] = charFullName); now every character has its own fixed
+    -- assignment (links[charFullName] = memberKey).
+    [1] = function(db)
+        for _, g in pairs(db.guilds or {}) do
+            local d = g.decisions
+            if d and d.confirmed then
+                d.links = d.links or {}
+                for memberKey, charFullName in pairs(d.confirmed) do
+                    d.links[charFullName] = d.links[charFullName] or memberKey
+                end
+                d.confirmed = nil
+            end
+        end
+    end,
+}
 
 function DB.Init()
     TheGuildRegistrarDB = TheGuildRegistrarDB or {}
@@ -57,8 +73,8 @@ end
 local function ensureDecisions(g)
     g.decisions = g.decisions or {}
     local d = g.decisions
-    d.confirmed = d.confirmed or {}
-    d.rejected = d.rejected or {}
+    d.links = d.links or {}           -- [charFullName] = memberKey (fixed by an officer)
+    d.rejected = d.rejected or {}     -- [memberKey .. "\001" .. charFullName] = true (separated)
     d.ignoredDiscord = d.ignoredDiscord or {}
     d.ignoredChars = d.ignoredChars or {}
     d.twinkOf = d.twinkOf or {}       -- [charFullName] = mainFullName (alt assigned by an officer)
@@ -106,7 +122,7 @@ function DB.ClearDecisions(which)
     if which == "ignored" then
         g.decisions.ignoredDiscord, g.decisions.ignoredChars = {}, {}
     else
-        g.decisions.confirmed, g.decisions.rejected = {}, {}
+        g.decisions.links, g.decisions.rejected = {}, {}
         g.decisions.twinkOf, g.decisions.markedMain = {}, {}
     end
 end

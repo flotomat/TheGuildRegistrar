@@ -1,8 +1,15 @@
 -- The Guild Registrar - matching engine (pure Lua 5.1)
 --
--- Scores every Discord member against every player (main + twinks), assigns them greedily
--- and classifies each assignment:
---   confirmed  - manually confirmed by an officer
+-- A Discord account can own several characters (1:n). The characters are grouped into players
+-- (main + twinks, see Players.lua); a Discord member gets one player as its main group and may get
+-- further groups attached (shown as twinks of the main). Order of assignment:
+--   1. fixed assignments of the officers (decisions.links[charFullName] = memberKey)
+--   2. one player per member, greedily by descending score
+--   3. remaining players are attached to the member that matches them best
+--      (twinks without known main from "unlikely" on, other characters from "likely" on)
+-- Ties are always broken by a fixed order, so repeated runs give the same result.
+-- Every assignment is classified:
+--   confirmed  - fixed by an officer
 --   sure       - score >= thresholds.sure and no close competitor (margin >= thresholds.margin)
 --   likely     - score >= thresholds.likely (or a sure score with a close competitor)
 --   unlikely   - score >= thresholds.unlikely
@@ -134,17 +141,17 @@ ctx = {
   members   = { { key, display, roles } },
   players   = list from Players.build,
   settings  = settings table (nameRule, thresholds, stopwords, guestRoleNames),
-  decisions = { confirmed = { [memberKey] = charFullName }, rejected = { [pairKey] = true },
+  decisions = { links = { [charFullName] = memberKey }, rejected = { [pairKey] = true },
                 ignoredDiscord = { [memberKey] = true }, ignoredChars = { [charFullName] = true } },
   yield     = optional function, called regularly (coroutine.yield inside the game)
 }
-returns { rows = {...}, summary = {...} }
+returns { rows = {...}, summary = {...}, members = {...} }
 ]]
 function Matcher.run(ctx)
     local settings = ctx.settings
     local th = settings.thresholds
     local decisions = ctx.decisions or {}
-    local confirmed = decisions.confirmed or {}
+    local links = decisions.links or {}
     local rejected = decisions.rejected or {}
     local ignoredDiscord = decisions.ignoredDiscord or {}
     local ignoredChars = decisions.ignoredChars or {}
@@ -163,9 +170,10 @@ function Matcher.run(ctx)
 
     -- players that take part
     local active, charByFull = {}, {}
-    for _, p in ipairs(ctx.players) do
+    for i, p in ipairs(ctx.players) do
+        p.index = i
         p.ignored = ignoredChars[p.main.fullName] and true or false
-        p.candidates, p.assigned, p.attachedTo = {}, nil, nil
+        p.candidates, p.assigned, p.attachedTo, p.taken, p.linkMissing = {}, nil, nil, nil, nil
         for _, c in ipairs(p.chars) do
             charByFull[c.fullName] = c
         end
@@ -176,10 +184,10 @@ function Matcher.run(ctx)
     local index = buildIndex(active)
 
     -- analyze and score Discord members
-    local members = {}
-    for _, src in ipairs(ctx.members) do
+    local members, memberByKey = {}, {}
+    for i, src in ipairs(ctx.members) do
         local m = {
-            key = src.key, display = src.display, roles = src.roles or {},
+            key = src.key, display = src.display, roles = src.roles or {}, index = i,
             ignored = ignoredDiscord[src.key] and true or false,
         }
         m.isGuest = false
@@ -192,6 +200,7 @@ function Matcher.run(ctx)
         m.analysis = Text.analyzeDiscordName(src.display, settings.nameRule, stopset)
         m.candidates = {}
         members[#members + 1] = m
+        memberByKey[m.key] = m
 
         if not m.ignored then
             local byPlayer = {}
@@ -231,58 +240,193 @@ function Matcher.run(ctx)
                 cand.score = Sim.combine(cand.name, cand.note)
                 if cand.score >= CANDIDATE_MIN and not rejected[Matcher.pairKey(m.key, p.main.fullName)] then
                     m.candidates[#m.candidates + 1] = cand
-                    p.candidates[#p.candidates + 1] = { member = m, score = cand.score }
+                    p.candidates[#p.candidates + 1] = { member = m, score = cand.score, cand = cand }
                 end
             end
-            Util.stableSort(m.candidates, function(a, b) return a.score > b.score end)
+            -- ties are broken by the player order (sorted by name), never by chance
+            table.sort(m.candidates, function(a, b)
+                if a.score ~= b.score then
+                    return a.score > b.score
+                end
+                return a.player.index < b.player.index
+            end)
         end
     end
     for _, p in ipairs(active) do
-        Util.stableSort(p.candidates, function(a, b) return a.score > b.score end)
+        table.sort(p.candidates, function(a, b)
+            if a.score ~= b.score then
+                return a.score > b.score
+            end
+            return a.member.index < b.member.index
+        end)
     end
     yield()
 
-    -- manual confirmations first
+    local function candidateOf(m, p)
+        for _, cand in ipairs(m.candidates) do
+            if cand.player == p then
+                return cand
+            end
+        end
+        return nil
+    end
+
     for _, m in ipairs(members) do
-        m.assigned, m.extras, m.status = nil, {}, nil
-        local target = confirmed[m.key]
-        if target and not m.ignored then
-            local c = charByFull[target]
-            if c and c.player and not c.player.ignored then
-                m.assigned = c.player
-                m.status = "confirmed"
-                m.score = 1
-                c.player.assigned = c.player.assigned or m
-            else
-                m.confirmedMissing = target
+        m.groups, m.assigned, m.extras, m.status, m.cand, m.score = {}, nil, {}, nil, nil, nil
+    end
+    local function addGroup(m, p, linked, cand, score)
+        m.groups[#m.groups + 1] = { player = p, linked = linked, cand = cand, score = score }
+        p.taken = m
+    end
+    local function hasMain(m)
+        for _, gr in ipairs(m.groups) do
+            if not gr.player.orphan then
+                return true
+            end
+        end
+        return false
+    end
+
+    -- 1. fixed assignments
+    for _, p in ipairs(active) do
+        local key = links[p.main.fullName]
+        if key then
+            local m = memberByKey[key]
+            if m and not m.ignored then
+                addGroup(m, p, true, candidateOf(m, p), 1)
+            elseif not m then
+                p.linkMissing = key
             end
         end
     end
+    -- fixed characters that are no longer in the guild
+    for charName, key in pairs(links) do
+        local m = memberByKey[key]
+        if m and not charByFull[charName] and (not m.confirmedMissing or charName < m.confirmedMissing) then
+            m.confirmedMissing = charName
+        end
+    end
 
-    -- greedy assignment by descending score
+    -- 2. one player per member, by descending score
     local pairs_ = {}
     for _, m in ipairs(members) do
-        if not m.ignored and not m.assigned then
+        if not m.ignored then
             for _, cand in ipairs(m.candidates) do
-                if cand.score >= th.unlikely then
+                if cand.score >= th.unlikely and not cand.player.taken and not cand.player.orphan then
                     pairs_[#pairs_ + 1] = { member = m, cand = cand }
                 end
             end
         end
     end
-    Util.stableSort(pairs_, function(a, b) return a.cand.score > b.cand.score end)
+    table.sort(pairs_, function(a, b)
+        if a.cand.score ~= b.cand.score then
+            return a.cand.score > b.cand.score
+        end
+        if a.member.index ~= b.member.index then
+            return a.member.index < b.member.index
+        end
+        return a.cand.player.index < b.cand.player.index
+    end)
     for _, pr in ipairs(pairs_) do
         local m, p = pr.member, pr.cand.player
-        if not p.assigned and not p.attachedTo then
-            if not m.assigned and m.status ~= "confirmed" then
-                m.assigned = p
-                m.cand = pr.cand
-                m.score = pr.cand.score
-                p.assigned = m
-            elseif p.orphan and m.assigned ~= p then
-                -- twink without detected main: attach to the member that already has a player
-                p.attachedTo = m
-                m.extras[#m.extras + 1] = { player = p, cand = pr.cand }
+        if not p.taken and not hasMain(m) then
+            -- a clearly better match with an account that already has its main: attach there (step 3)
+            local best = p.candidates[1]
+            local defer = best and best.member ~= m and best.score >= th.likely
+                and best.score - pr.cand.score > th.margin and hasMain(best.member)
+            if not defer then
+                addGroup(m, p, false, pr.cand, pr.cand.score)
+            end
+        end
+    end
+    yield()
+
+    -- 3. attach the remaining players to the Discord member that matches them best
+    for _, p in ipairs(active) do
+        local best = not p.taken and p.candidates[1]
+        if best and not best.member.ignored then
+            local m = best.member
+            if p.orphan then
+                if best.score >= th.unlikely then
+                    addGroup(m, p, false, best.cand, best.score)
+                end
+            elseif #m.groups > 0 and best.score >= th.likely then
+                addGroup(m, p, false, best.cand, best.score)
+            end
+        end
+    end
+
+    -- main group of each member: a character marked as main first, then a real main before a twink
+    -- without main, fixed before automatic, then the best match
+    local function better(a, b)
+        local am, bm = a.player.main.manualMain and 1 or 0, b.player.main.manualMain and 1 or 0
+        if am ~= bm then
+            return am > bm
+        end
+        local ao, bo = a.player.orphan and 1 or 0, b.player.orphan and 1 or 0
+        if ao ~= bo then
+            return ao < bo
+        end
+        local al, bl = a.linked and 1 or 0, b.linked and 1 or 0
+        if al ~= bl then
+            return al > bl
+        end
+        local as, bs = a.cand and a.cand.score or 0, b.cand and b.cand.score or 0
+        if as ~= bs then
+            return as > bs
+        end
+        return a.player.index < b.player.index
+    end
+    for _, m in ipairs(members) do
+        if #m.groups > 0 then
+            table.sort(m.groups, better)
+            local primary = m.groups[1]
+            m.assigned = primary.player
+            m.cand = primary.cand
+            m.score = primary.score
+            m.status = primary.linked and "confirmed" or nil
+            primary.player.assigned = m
+            for i = 2, #m.groups do
+                local gr = m.groups[i]
+                gr.player.attachedTo = m
+                m.extras[#m.extras + 1] = {
+                    player = gr.player, cand = gr.cand, score = gr.score, linked = gr.linked,
+                    status = gr.linked and "confirmed" or classify(gr.score, 1, th),
+                }
+            end
+        end
+    end
+
+    -- twinks that an officer separated from this Discord account: split them off their group
+    local splitOff = {}
+    local function split(m, p)
+        local keep = { p.main }
+        for _, c in ipairs(p.chars) do
+            if c ~= p.main then
+                if rejected[Matcher.pairKey(m.key, c.fullName)] then
+                    local np = { id = c.fullName, main = c, chars = { c }, twinks = {}, orphan = c.isTwink and true or false,
+                        candidates = {}, index = #ctx.players + #splitOff + 1, splitFrom = m }
+                    c.player = np
+                    splitOff[#splitOff + 1] = np
+                else
+                    keep[#keep + 1] = c
+                end
+            end
+        end
+        if #keep < #p.chars then
+            p.chars = keep
+            local twinks = {}
+            for i = 2, #keep do
+                twinks[#twinks + 1] = keep[i]
+            end
+            p.twinks = twinks
+        end
+    end
+    for _, m in ipairs(members) do
+        if m.assigned then
+            split(m, m.assigned)
+            for _, ex in ipairs(m.extras) do
+                split(m, ex.player)
             end
         end
     end
@@ -291,7 +435,7 @@ function Matcher.run(ctx)
     -- classification
     local function competitorForMember(m, p)
         for _, cand in ipairs(m.candidates) do
-            if cand.player ~= p and not cand.player.orphan then
+            if cand.player ~= p and not cand.player.orphan and cand.player.taken ~= m then
                 return cand.score
             end
         end
@@ -324,16 +468,13 @@ function Matcher.run(ctx)
             row.score = m.score
             row.margin = m.score - comp
             row.status = classify(m.score, row.margin, th)
-            row.reasons = { m.cand.nameReason, m.cand.noteReason }
+            row.reasons = m.cand and { m.cand.nameReason, m.cand.noteReason } or nil
         else
             row.status = m.isGuest and "guest" or "unassigned"
         end
-        for _, ex in ipairs(m.extras) do
-            ex.status = classify(ex.cand.score, 1, th)
-        end
         -- alternatives: other candidates
         for _, cand in ipairs(m.candidates) do
-            if cand.player ~= m.assigned and #row.alternatives < 5 then
+            if cand.player.taken ~= m and #row.alternatives < 5 then
                 row.alternatives[#row.alternatives + 1] = { player = cand.player, score = cand.score }
             end
         end
@@ -362,20 +503,30 @@ function Matcher.run(ctx)
         rows[#rows + 1] = row
     end
 
+    local loose = {}
     for _, p in ipairs(ctx.players) do
         if not p.assigned and not p.attachedTo then
-            local row = { kind = "player", player = p, flags = {}, alternatives = {}, side = "wowOnly" }
-            row.status = p.ignored and "ignored" or "unassigned"
-            for _, pc in ipairs(p.candidates or {}) do
-                if #row.alternatives < 5 then
-                    row.alternatives[#row.alternatives + 1] = { member = pc.member, score = pc.score }
-                end
-            end
-            if p.orphan then
-                row.flags.orphanTwink = true
-            end
-            rows[#rows + 1] = row
+            loose[#loose + 1] = p
         end
+    end
+    for _, p in ipairs(splitOff) do
+        loose[#loose + 1] = p
+    end
+    for _, p in ipairs(loose) do
+        local row = { kind = "player", player = p, flags = {}, alternatives = {}, side = "wowOnly" }
+        row.status = p.ignored and "ignored" or "unassigned"
+        for _, pc in ipairs(p.candidates or {}) do
+            if #row.alternatives < 5 then
+                row.alternatives[#row.alternatives + 1] = { member = pc.member, score = pc.score }
+            end
+        end
+        if p.orphan then
+            row.flags.orphanTwink = true
+        end
+        if p.linkMissing then
+            row.flags.linkMissing = p.linkMissing
+        end
+        rows[#rows + 1] = row
     end
 
     for _, row in ipairs(rows) do

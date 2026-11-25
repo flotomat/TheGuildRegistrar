@@ -148,18 +148,36 @@ local function playerText(row)
     return s
 end
 
+-- Which notes take part in the assignment (the officer note only if the rank may read it).
+local function notesUsed()
+    local s = settings()
+    return s.useNote and true or false, (s.useOfficerNote and ns.state.canViewOfficer ~= false) and true or false
+end
+
+-- Notes of a character; notes that are not used for the assignment are shown in grey.
 local function notesText(c)
     if not c then
         return ""
     end
+    local usePublic, useOfficer = notesUsed()
     local parts = {}
     if c.note and c.note ~= "" then
-        parts[#parts + 1] = c.note
+        parts[#parts + 1] = usePublic and c.note or ("|cff666666" .. c.note .. "|r")
     end
     if c.officerNote and c.officerNote ~= "" then
-        parts[#parts + 1] = "|cff88aaff" .. c.officerNote .. "|r"
+        parts[#parts + 1] = (useOfficer and "|cff88aaff" or "|cff556070") .. c.officerNote .. "|r"
     end
     return table.concat(parts, " · ")
+end
+
+-- The attached group a character belongs to (nil for the main group of the row).
+local function extraOf(row, c)
+    for _, ex in ipairs(row.extras or {}) do
+        if ex.player == c.player then
+            return ex
+        end
+    end
+    return nil
 end
 
 local function rankIssue(row, c)
@@ -210,8 +228,10 @@ local function sideText(row)
     return nil
 end
 
-local function altReasonText(c)
-    if c.manualTwink then
+local function altReasonText(c, row)
+    if row and row.player and c.player ~= row.player then
+        return L.TOOLTIP_ALT_REASON_DISCORD
+    elseif c.manualTwink then
         return L.TOOLTIP_ALT_REASON_MANUAL
     elseif c.twinkReason == "rank" then
         return L.TOOLTIP_ALT_REASON_RANK
@@ -360,11 +380,13 @@ end
 local function addCharLines(c, label)
     GameTooltip:AddDoubleLine(label .. ": " .. charText(c) .. string.format(" |cffaaaaaa(%s)|r", c.level or "?"),
         c.rankName or "", 1, 1, 1, 0.8, 0.8, 0.8)
+    local usePublic, useOfficer = notesUsed()
+    local unused = " |cff888888(" .. L.TOOLTIP_NOTE_UNUSED .. ")|r"
     if c.note and c.note ~= "" then
-        GameTooltip:AddLine("   " .. L.NOTE_PUBLIC .. ": " .. c.note, 0.9, 0.9, 0.9, true)
+        GameTooltip:AddLine("   " .. L.NOTE_PUBLIC .. ": " .. c.note .. (usePublic and "" or unused), 0.9, 0.9, 0.9, true)
     end
     if c.officerNote and c.officerNote ~= "" then
-        GameTooltip:AddLine("   " .. L.NOTE_OFFICER .. ": " .. c.officerNote, 0.55, 0.7, 1, true)
+        GameTooltip:AddLine("   " .. L.NOTE_OFFICER .. ": " .. c.officerNote .. (useOfficer and "" or unused), 0.55, 0.7, 1, true)
     end
 end
 
@@ -385,7 +407,11 @@ end
 
 local function showRowTooltip(owner, row)
     GameTooltip:SetOwner(owner, "ANCHOR_CURSOR_RIGHT")
-    GameTooltip:AddLine(statusText(row.status) .. (row.score and string.format("  |cffaaaaaa%d%%|r", row.score * 100) or ""))
+    GameTooltip:AddLine(statusText(row.status) .. (row.score and row.status ~= "confirmed"
+        and string.format("  |cffaaaaaa%d%%|r", row.score * 100) or ""))
+    if row.status == "confirmed" then
+        GameTooltip:AddLine(L.TOOLTIP_FIXED, 0.3, 0.85, 1)
+    end
     local side = sideText(row)
     if side then
         GameTooltip:AddLine(side, 1, 0.6, 0.6)
@@ -450,9 +476,14 @@ local function showChildTooltip(owner, item)
     local row, c = item.row, item.char
     GameTooltip:SetOwner(owner, "ANCHOR_CURSOR_RIGHT")
     addCharLines(c, L.TOOLTIP_TWINK)
+    local ex = extraOf(row, c)
+    if ex then
+        GameTooltip:AddLine(statusText(ex.status) .. (ex.status ~= "confirmed" and ex.score
+            and string.format("  |cffaaaaaa%d%%|r", ex.score * 100) or ""))
+    end
     local main = row.player and row.player.main
     if main then
-        local reason = altReasonText(c)
+        local reason = altReasonText(c, row)
         GameTooltip:AddLine(string.format(L.TOOLTIP_ALT_OF, main.name) .. (reason and (" (" .. reason .. ")") or ""),
             0.8, 0.8, 0.8, true)
     end
@@ -504,13 +535,174 @@ local function findCharByName(name)
     return nil
 end
 
--- Actions for one guild character (main or alt).
+-- The context menu always lists every action. Actions that are not possible for an entry are greyed
+-- out; their tooltip says why.
+
+-- Menu entry: enabled with `func`, or greyed out with the reason `na`.
+local function entry(text, func, na)
+    if na then
+        return { text = text, disabled = true, tooltip = na, tooltipTitle = text }
+    end
+    return { text = text, func = func }
+end
+
+local function section(text)
+    return { text = "|cffffd100" .. text .. "|r", isTitle = true }
+end
+
+-- Mains of all groups shown with a row (the main group and attached groups).
+local function rowMains(row)
+    local list = {}
+    if row.player then
+        list[#list + 1] = row.player.main.fullName
+    end
+    for _, ex in ipairs(row.extras or {}) do
+        list[#list + 1] = ex.player.main.fullName
+    end
+    return list
+end
+
+-- True if character `c` is held in this row by a fixed assignment (its own or that of its group main).
+local function isFixed(row, c)
+    local m = row.member
+    if not m or not c then
+        return false
+    end
+    if ns.Engine.IsConfirmed(m.key, c.fullName) then
+        return true
+    end
+    if c.player == row.player then
+        return row.status == "confirmed"
+    end
+    local ex = extraOf(row, c)
+    return ex and ex.linked and true or false
+end
+
+-- Separate character `c` (with its group, if it is a group main) from the row's Discord member.
+-- Fixed assignments need a confirmation first.
+local function unlink(row, c)
+    local m = row.member
+    local function doIt()
+        ns.Engine.Unlink(m.key, c.fullName)
+        ns.Engine.Print(string.format(L.UNLINKED, c.name, m.display))
+    end
+    if isFixed(row, c) then
+        ns.Dialogs.ShowConfirm(L.UNLINK_TITLE, string.format(L.UNLINK_CONFIRM, c.name, m.display, m.display), doIt)
+    else
+        doIt()
+    end
+end
+
+-- Assignment section. `c` is the character the menu was opened for (main of the row or an alt).
+local function addAssignActions(items, row, c, isChild)
+    local E = ns.Engine
+    local m, p = row.member, row.player
+    local ignored = row.status == "ignored"
+    items[#items + 1] = section(L.MENU_SECTION_ASSIGN)
+
+    -- the characters this menu works on: the whole row, or the one alt
+    local targets = isChild and { c.fullName } or rowMains(row)
+    local naPair = (not m and L.NA_NO_DISCORD) or (not c and L.NA_NO_CHAR) or (ignored and L.NA_IGNORED) or nil
+    local allFixed, anyFixed = true, false
+    if m then
+        for _, name in ipairs(targets) do
+            if E.IsConfirmed(m.key, name) then
+                anyFixed = true
+            else
+                allFixed = false
+            end
+        end
+    end
+    if isChild then
+        allFixed = isFixed(row, c)
+    end
+
+    items[#items + 1] = entry(L.MENU_CONFIRM, function()
+        E.Confirm(m.key, targets)
+    end, naPair or (allFixed and L.NA_CONFIRMED) or nil)
+
+    items[#items + 1] = entry(L.MENU_UNCONFIRM, function()
+        local names = {}
+        for _, name in ipairs(targets) do
+            if E.IsConfirmed(m.key, name) then
+                local ch = E.FindChar(name)
+                names[#names + 1] = ch and ch.name or name
+            end
+        end
+        ns.Dialogs.ShowConfirm(L.UNCONFIRM_TITLE, string.format(L.UNCONFIRM_CONFIRM, table.concat(names, ", "), m.display), function()
+            E.Unconfirm(m.key, targets)
+        end)
+    end, naPair or ((not anyFixed) and L.NA_NOT_CONFIRMED) or nil)
+
+    items[#items + 1] = entry(L.MENU_UNLINK, function()
+        unlink(row, c)
+    end, naPair)
+
+    -- other candidates: for the row, or for an alt that heads its own (attached) group
+    local sub = { { text = L.MENU_ASSIGN_OTHER, isTitle = true } }
+    if not ignored and c then
+        if not isChild then
+            for _, alt in ipairs(row.alternatives) do
+                if m and alt.player then
+                    sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.player.main.name, alt.score * 100), func = function()
+                        E.Confirm(m.key, alt.player.main.fullName)
+                    end }
+                elseif p and alt.member then
+                    sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.member.display, alt.score * 100), func = function()
+                        E.Confirm(alt.member.key, p.main.fullName)
+                    end }
+                end
+            end
+        elseif c.player and c == c.player.main then
+            for _, pc in ipairs(c.player.candidates or {}) do
+                if pc.member ~= m and #sub < 7 then
+                    sub[#sub + 1] = { text = string.format("%s (%d%%)", pc.member.display, pc.score * 100), func = function()
+                        E.Confirm(pc.member.key, c.fullName)
+                    end }
+                end
+            end
+        end
+    end
+    items[#items + 1] = { text = L.MENU_ASSIGN_OTHER, submenu = sub, disabled = #sub == 1,
+        tooltip = #sub == 1 and ((ignored and L.NA_IGNORED) or (not c and L.NA_NO_CHAR) or L.NA_NO_CANDIDATES) or nil }
+
+    items[#items + 1] = entry(L.MENU_ASSIGN_BY_NAME, function()
+        ns.Dialogs.ShowInput(L.MENU_ASSIGN_BY_NAME, string.format(L.ASSIGN_BY_NAME_LABEL, m.display), "", function(name)
+            local ch = findCharByName(name)
+            if ch then
+                E.Confirm(m.key, ch.fullName)
+            else
+                E.Print(string.format(L.ASSIGN_NOT_FOUND, name))
+            end
+        end)
+    end, (not m and L.NA_NO_DISCORD) or (ignored and L.NA_IGNORED) or nil)
+
+    items[#items + 1] = entry(L.MENU_ASSIGN_MEMBER, function()
+        ns.Dialogs.ShowInput(L.MENU_ASSIGN_MEMBER, string.format(L.ASSIGN_MEMBER_LABEL, c.name), "", function(name)
+            local member = E.FindMember(name)
+            if member then
+                E.Confirm(member.key, c.fullName)
+            else
+                E.Print(string.format(L.MEMBER_NOT_FOUND, name))
+            end
+        end)
+    end, (not c and L.NA_NO_CHAR) or (ignored and L.NA_IGNORED) or nil)
+
+    items[#items + 1] = entry(L.MENU_RESET, function()
+        E.ResetMember(m.key)
+    end, (not m and L.NA_NO_DISCORD) or ((not E.HasDecision(m.key)) and L.NA_NO_DECISIONS) or nil)
+end
+
+-- Character section: alt / main, guild rank, note, whisper.
 local function addCharActions(items, row, c)
     local E = ns.Engine
+    items[#items + 1] = section(string.format(L.MENU_SECTION_CHAR, c and c.name or "-"))
+    local naChar = (not c and L.NA_NO_CHAR) or nil
+    local na = naChar or (row.status == "ignored" and L.NA_IGNORED) or nil
 
-    if row.status ~= "ignored" then
-        -- assign as alt of another player
-        local sub = { { text = L.MENU_SET_ALT, isTitle = true } }
+    -- assign as alt of another player
+    local sub = { { text = L.MENU_SET_ALT, isTitle = true } }
+    if not na then
         if c.player then
             for _, sug in ipairs(ns.Advice.altSuggestions(c.player, 0)) do
                 if #sub < 7 then
@@ -531,26 +723,25 @@ local function addCharActions(items, row, c)
                 end
             end)
         end }
-        items[#items + 1] = { text = L.MENU_SET_ALT, submenu = sub }
-
-        if c.isTwink then
-            items[#items + 1] = { text = L.MENU_MARK_MAIN, func = function()
-                E.MarkMain(c.fullName)
-            end }
-        end
-        if E.HasAltDecision(c.fullName) then
-            items[#items + 1] = { text = L.MENU_RESET_ALT, func = function()
-                E.ResetAltDecision(c.fullName)
-            end }
-        end
     end
+    items[#items + 1] = { text = L.MENU_SET_ALT, submenu = sub, disabled = na ~= nil, tooltip = na }
+
+    -- main: the character is shown as alt in this row or detected as alt
+    local isRowMain = c and row.player and c == row.player.main
+    items[#items + 1] = entry(L.MENU_MARK_MAIN, function()
+        E.MarkMain(c.fullName)
+    end, na or ((isRowMain and not c.isTwink) and L.NA_ALREADY_MAIN) or nil)
+
+    items[#items + 1] = entry(L.MENU_RESET_ALT, function()
+        E.ResetAltDecision(c.fullName)
+    end, na or ((not E.HasAltDecision(c.fullName)) and L.NA_NO_ALT_DECISION) or nil)
 
     -- guild rank (blocked by Blizzard in WoW: Forever -> greyed out)
-    if ns.RankChange.IsAvailable() then
-        local sub = { { text = L.MENU_SET_RANK, isTitle = true } }
+    if ns.RankChange.IsAvailable() and not naChar then
+        local rsub = { { text = L.MENU_SET_RANK, isTitle = true } }
         for rank, rankName in ipairs(ns.state.rankNames or {}) do
             local allowed = ns.RankChange.CanSet(c, rank)
-            sub[#sub + 1] = { text = string.format("%d. %s", rank, rankName), disabled = not allowed, func = function()
+            rsub[#rsub + 1] = { text = string.format("%d. %s", rank, rankName), disabled = not allowed, func = function()
                 ns.Dialogs.ShowConfirm(L.MENU_SET_RANK, string.format(L.RANK_CONFIRM, c.name, c.rankName or "?", rankName), function()
                     local ok, err = ns.RankChange.Set(c, rank)
                     E.Print(ok and string.format(L.RANK_CHANGED, c.name) or L[err])
@@ -560,119 +751,78 @@ local function addCharActions(items, row, c)
                 end)
             end }
         end
-        items[#items + 1] = { text = L.MENU_SET_RANK, submenu = sub }
+        items[#items + 1] = { text = L.MENU_SET_RANK, submenu = rsub }
     else
-        items[#items + 1] = { text = L.MENU_SET_RANK, disabled = true, tooltip = L.BLOCKED_BY_BLIZZARD }
+        items[#items + 1] = entry(L.MENU_SET_RANK, nil, naChar or L.BLOCKED_BY_BLIZZARD)
     end
 
     -- guild note (blocked by Blizzard in WoW: Forever -> greyed out; a suggestion can be copied)
-    if ns.Notes.IsAvailable() then
-        items[#items + 1] = { text = L.MENU_WRITE_NOTE, func = function()
-            ns.Dialogs.ShowWriteNote(row, c)
-        end }
-    else
-        items[#items + 1] = { text = L.MENU_WRITE_NOTE, disabled = true, tooltip = L.BLOCKED_BY_BLIZZARD }
-    end
-    local suggestion = ns.Advice.suggestedNote(row, c, settings())
-    if suggestion and suggestion ~= "" then
-        items[#items + 1] = { text = L.MENU_COPY_NOTE, func = function()
-            ns.Dialogs.ShowCopy(L.MENU_COPY_NOTE, suggestion, L.COPY_NOTE_HINT)
-        end }
-    end
+    items[#items + 1] = entry(L.MENU_WRITE_NOTE, function()
+        ns.Dialogs.ShowWriteNote(row, c)
+    end, naChar or ((not ns.Notes.IsAvailable()) and L.BLOCKED_BY_BLIZZARD) or nil)
+    local suggestion = c and ns.Advice.suggestedNote(row, c, settings())
+    items[#items + 1] = entry(L.MENU_COPY_NOTE, function()
+        ns.Dialogs.ShowCopy(L.MENU_COPY_NOTE, suggestion, L.COPY_NOTE_HINT)
+    end, naChar or ((not suggestion or suggestion == "") and L.NA_NO_TEMPLATE) or nil)
 
-    items[#items + 1] = { text = L.MENU_WHISPER .. (c.online and (" " .. W.ICON_ONLINE) or ""), func = function()
+    items[#items + 1] = entry(L.MENU_WHISPER .. ((c and c.online) and (" " .. W.ICON_ONLINE) or ""), function()
         whisper(c.fullName)
-    end }
+    end, naChar)
 end
 
-local function rowMenu(row)
+-- List section: ignore, copy names.
+local function addListActions(items, row, c, isChild)
     local E = ns.Engine
-    local items = {}
     local m, p = row.member, row.player
-    local title = m and m.display or (p and p.main.name) or "?"
-    items[#items + 1] = { text = title, isTitle = true }
+    items[#items + 1] = section(L.MENU_SECTION_LIST)
+    local memberIgnored = m and m.ignored
+    items[#items + 1] = entry(memberIgnored and L.MENU_UNIGNORE_DISCORD or L.MENU_IGNORE_DISCORD, function()
+        E.SetIgnoredMember(m.key, not memberIgnored)
+    end, (not m and L.NA_NO_DISCORD) or nil)
 
-    if m and p and row.status ~= "ignored" then
-        if row.status ~= "confirmed" then
-            items[#items + 1] = { text = L.MENU_CONFIRM, func = function()
-                E.Confirm(m.key, p.main.fullName)
-            end }
-        end
-        items[#items + 1] = { text = L.MENU_REJECT, func = function()
-            E.Reject(m.key, p.main.fullName)
-        end }
-    end
+    -- ignoring works on the main of a character group
+    local groupMain = c and c.player and c.player.main
+    local charIgnored = groupMain and p and p.ignored and groupMain == p.main
+    items[#items + 1] = entry(charIgnored and L.MENU_UNIGNORE_CHAR or L.MENU_IGNORE_CHAR, function()
+        E.SetIgnoredChar(groupMain.fullName, not charIgnored)
+    end, (not c and L.NA_NO_CHAR) or ((isChild and c ~= groupMain) and L.NA_ONLY_GROUP_MAIN) or nil)
 
-    -- assign another candidate
-    if row.status ~= "ignored" and #row.alternatives > 0 then
-        local sub = { { text = L.MENU_ASSIGN_OTHER, isTitle = true } }
-        for _, alt in ipairs(row.alternatives) do
-            if m and alt.player then
-                sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.player.main.name, alt.score * 100), func = function()
-                    E.Confirm(m.key, alt.player.main.fullName)
-                end }
-            elseif p and alt.member then
-                sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.member.display, alt.score * 100), func = function()
-                    E.Confirm(alt.member.key, p.main.fullName)
-                end }
-            end
-        end
-        items[#items + 1] = { text = L.MENU_ASSIGN_OTHER, submenu = sub }
-    end
-    if m and row.status ~= "ignored" then
-        items[#items + 1] = { text = L.MENU_ASSIGN_BY_NAME, func = function()
-            ns.Dialogs.ShowInput(L.MENU_ASSIGN_BY_NAME, string.format(L.ASSIGN_BY_NAME_LABEL, m.display), "", function(name)
-                local c = findCharByName(name)
-                if c then
-                    E.Confirm(m.key, c.fullName)
-                else
-                    E.Print(string.format(L.ASSIGN_NOT_FOUND, name))
-                end
-            end)
-        end }
-    end
-    if m and E.HasDecision(m.key) then
-        items[#items + 1] = { text = L.MENU_RESET, func = function()
-            E.ResetMember(m.key)
-        end }
-    end
-
-    -- ignore
-    if m then
-        local ignored = row.status == "ignored"
-        items[#items + 1] = { text = ignored and L.MENU_UNIGNORE_DISCORD or L.MENU_IGNORE_DISCORD, func = function()
-            E.SetIgnoredMember(m.key, not ignored)
-        end }
-    elseif p then
-        local ignored = row.status == "ignored"
-        items[#items + 1] = { text = ignored and L.MENU_UNIGNORE_CHAR or L.MENU_IGNORE_CHAR, func = function()
-            E.SetIgnoredChar(p.main.fullName, not ignored)
-        end }
-    end
-
-    -- the main character (alts have their own menu in their rows)
-    if p then
-        addCharActions(items, row, p.main)
-    end
     items[#items + 1] = { text = L.MENU_COPY_NAMES, func = function()
         local lines = {}
         if m then
             lines[#lines + 1] = m.display
         end
-        for _, c in ipairs(ns.Advice.rowChars(row)) do
+        if isChild then
             lines[#lines + 1] = c.name
+        else
+            for _, ch in ipairs(ns.Advice.rowChars(row)) do
+                lines[#lines + 1] = ch.name
+            end
         end
         ns.Dialogs.ShowCopy(L.MENU_COPY_NAMES, table.concat(lines, "\n"))
     end }
+end
+
+local function openMenu(row, c, isChild)
+    local m = row.member
+    local title = isChild and c.name or (m and m.display) or (c and c.name) or "?"
+    if isChild and m then
+        title = title .. "  |cff888888(" .. m.display .. ")|r"
+    end
+    local items = { { text = title, isTitle = true } }
+    addAssignActions(items, row, c, isChild)
+    addCharActions(items, row, c)
+    addListActions(items, row, c, isChild)
     items[#items + 1] = { text = CLOSE or "Close" }
     ns.Menu.Open(items)
 end
 
+local function rowMenu(row)
+    openMenu(row, row.player and row.player.main, false)
+end
+
 local function childMenu(item)
-    local items = { { text = item.char.name, isTitle = true } }
-    addCharActions(items, item.row, item.char)
-    items[#items + 1] = { text = CLOSE or "Close" }
-    ns.Menu.Open(items)
+    openMenu(item.row, item.char, true)
 end
 
 -- Export ---------------------------------------------------------------------------
@@ -803,7 +953,13 @@ local function updateRow(row, data)
         setIndent(row, INDENT)
         row.toggle:Hide()
         row.cols[1]:SetText("")
-        row.cols[2]:SetText("|cff999999" .. L.TOOLTIP_TWINK .. "|r")
+        -- alts of an attached group (assigned via the Discord name) show their own status
+        local ex = extraOf(parent, c)
+        local status = ""
+        if ex and c == ex.player.main then
+            status = " " .. statusText(ex.status)
+        end
+        row.cols[2]:SetText("|cff999999" .. L.TOOLTIP_TWINK .. "|r" .. status)
         row.cols[3]:SetText("")
         row.cols[4]:SetText(charText(c) .. string.format(" |cff888888%s|r", c.level or ""))
         row.cols[5]:SetText(notesText(c))
@@ -892,9 +1048,40 @@ local function create(parent)
         f.Update()
     end)
 
+    -- which notes are used for the assignment (same setting as in the Options tab)
+    local notesLabel = W.Label(f, L.NOTES_SOURCE_LABEL, "GameFontNormal")
+    notesLabel:SetPoint("TOPLEFT", 8, -64)
+    local noteSources = {
+        { value = "both", text = L.NOTES_SOURCE_BOTH },
+        { value = "public", text = L.NOTES_SOURCE_PUBLIC },
+        { value = "officer", text = L.NOTES_SOURCE_OFFICER },
+        { value = "none", text = L.NOTES_SOURCE_NONE },
+    }
+    local notesCycle = W.Cycle(f, 210, noteSources, function()
+        local s = settings()
+        if s.useNote and s.useOfficerNote then
+            return "both"
+        elseif s.useNote then
+            return "public"
+        elseif s.useOfficerNote then
+            return "officer"
+        end
+        return "none"
+    end, function(v)
+        local s = settings()
+        s.useNote = (v == "both" or v == "public")
+        s.useOfficerNote = (v == "both" or v == "officer")
+        ns.Engine.Run()
+    end)
+    notesCycle:SetPoint("LEFT", notesLabel, "RIGHT", 10, 0)
+    W.Tooltip(notesCycle, L.NOTES_SOURCE_LABEL, W.LocText("NOTES_SOURCE_TOOLTIP"))
+    local notesWarn = W.Label(f, "", "GameFontHighlightSmall")
+    notesWarn:SetPoint("LEFT", notesCycle, "RIGHT", 12, 0)
+    notesWarn:SetPoint("RIGHT", -8, 0)
+
     -- header
     local header = CreateFrame("Frame", nil, f)
-    header:SetPoint("TOPLEFT", 0, -60)
+    header:SetPoint("TOPLEFT", 0, -86)
     header:SetPoint("RIGHT", 0, 0)
     header:SetHeight(22)
     local hbg = header:CreateTexture(nil, "BACKGROUND")
@@ -976,6 +1163,18 @@ local function create(parent)
     end)
     exportNames:SetPoint("LEFT", export, "RIGHT", 8, 0)
 
+    -- manual decisions as a code for other officers (pasted in their Import tab)
+    local share = W.Button(f, L.BTN_SHARE, 190, 24, function()
+        local text, n = ns.Engine.ExportDecisions()
+        if not text or n == 0 then
+            ns.Engine.Print(L.SHARE_EMPTY)
+            return
+        end
+        ns.Dialogs.ShowCopy(L.SHARE_TITLE, text, L.SHARE_HINT)
+    end)
+    share:SetPoint("LEFT", exportNames, "RIGHT", 8, 0)
+    W.Tooltip(share, L.BTN_SHARE, L.SHARE_HINT)
+
     local reset = W.Button(f, L.BTN_RESET_FILTERS, 170, 24, function()
         local defaults = ns.Util.copy(ns.DEFAULT_FILTERS)
         for k, v in pairs(defaults) do
@@ -1007,6 +1206,13 @@ local function create(parent)
             end
         end
         hintCb.label:SetText(L.FILTER_HINTS)
+        notesCycle.Refresh()
+        local s0 = settings()
+        if s0.useOfficerNote and state.canViewOfficer == false then
+            notesWarn:SetText("|cffffaa00" .. L.NOTES_OFFICER_UNREADABLE .. "|r")
+        else
+            notesWarn:SetText("")
+        end
         local items, rows = filteredRows()
         f.rows = items
         f.parentRows = rows or {}

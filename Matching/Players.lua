@@ -10,7 +10,11 @@
 -- Officer decisions override the detection:
 --   decisions.twinkOf[charFullName] = mainFullName  -> twink of that main (c.manualTwink)
 --   decisions.markedMain[charFullName] = true        -> never a twink (c.manualMain)
+--   decisions.links[charFullName] = memberKey        -> fixed Discord account; a twink fixed to
+--                                                       another account than its main is split off
 -- c.detectedTwink / c.noteMainChar keep what the guild data says, so differences can be reported.
+-- Characters are processed sorted by full name, so the result does not depend on the order in
+-- which the game returns the roster (it changes e.g. when someone logs in).
 
 local _, ns = ...
 
@@ -116,9 +120,21 @@ end
 
 -- Build players from roster characters.
 -- Returns list of players: { id, main = char, chars = {...}, twinks = {...}, orphan = bool }
-function Players.build(chars, settings, decisions)
+function Players.build(roster, settings, decisions)
     local twinkOf = decisions and decisions.twinkOf or {}
     local markedMain = decisions and decisions.markedMain or {}
+    local links = decisions and decisions.links or {}
+    local chars = {}
+    for i, c in ipairs(roster) do
+        chars[i] = c
+    end
+    table.sort(chars, function(a, b)
+        local ka, kb = a.fullName or a.name or "", b.fullName or b.name or ""
+        if ka ~= kb then
+            return ka < kb
+        end
+        return (a.index or 0) < (b.index or 0)
+    end)
     local stopset = Text.wordSet(settings.stopwords)
     local twinkRankSet = Text.wordSet(settings.twinkRankNames)
     local patterns = Players.compilePatterns(settings.twinkPatterns)
@@ -128,6 +144,7 @@ function Players.build(chars, settings, decisions)
         c.forms = Text.forms(c.name)
         c.isTwink, c.twinkRefs, c.mainChar, c.twinkReason = false, nil, nil, nil
         c.detectedTwink, c.noteMainChar, c.manualTwink, c.manualMain, c.player = false, nil, nil, nil, nil
+        c.splitByLink = nil
         if c.fullName then
             byFull[c.fullName] = c
         end
@@ -222,7 +239,12 @@ function Players.build(chars, settings, decisions)
     for _, c in ipairs(chars) do
         if c.isTwink then
             local r = root(c)
-            if r == c then
+            local link = c.fullName and links[c.fullName]
+            if link and r ~= c and links[r.fullName or ""] ~= link then
+                -- fixed to another Discord account than its main: a group of its own
+                c.splitByLink = true
+                playerFor(c)
+            elseif r == c then
                 playerFor(c)
             else
                 local p = playerFor(r)

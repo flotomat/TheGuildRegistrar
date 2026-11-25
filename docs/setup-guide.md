@@ -60,9 +60,23 @@ To update the list later: start the app → **Export to clipboard** → paste in
 
 ## 6. Configure the addon
 
+**The goal: everything is assigned automatically.** A Discord account can own several characters - one main and its alts. The addon finds them by itself when the guild data follows a few rules:
+
+- the **Discord name is in the officer note** (or the public note) of the main, e.g. `DC: Jens`,
+- **alts** hold an alt rank or have a note like `Twink Wurstinator` / `alt of Wurstinator` (an alt whose note names the Discord account is found as well),
+- optionally the Discord names follow a **naming rule** such as `Nickname | Main`.
+
+Which notes are read is shown above the list in the Comparison tab (*Assignment by character names and: ...*) and can be switched there or in the Options tab. Notes that are not used are shown in grey. Manual assignments are the **fallback** for single cases (see below) and can be shared with other officers.
+
 - **Ranks tab**: assign each Discord role to the guild rank it stands for, mark guest roles (e.g. *Guest*) and twink/alt ranks.
 - **Options tab**: naming rule (e.g. `Nickname | Main`), which notes to use, whether alts are called "Twinks" or "Alts", alt patterns, note templates and the optional note check, ignored words, thresholds.
-- In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Right-click entries to confirm, reject or reassign matches, assign a character as alt of a main, whisper players or copy a note suggestion. Click **+** to show the alts of a player.
+- In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Click **+** to show the alts of a player.
+- **Right-click** an entry (or an alt below it) for all actions. Actions that do not fit the entry are greyed out; the tooltip says why.
+  - **Confirm assignment (fix it)**: the assignment no longer changes automatically.
+  - **Remove confirmation**: back to automatic assignment.
+  - **Separate from this Discord member**: the character (with its alts, if it is a main) is no longer assigned to this Discord account. For a confirmed assignment a window asks first. Undo with *Reset manual decisions*.
+  - **Add character by name** / **Assign to Discord member by name**, **Assign other candidate**, **Assign as alt of** / **Mark as main**, ignore, whisper, copy a note suggestion.
+- **Share assignments** (Comparison tab) creates a code with your manual decisions. Give it to other officers, e.g. as a text file in Discord; they paste it into their **Import** tab and confirm. Shared entries replace their own decisions for the same characters. The code contains Discord names and assignments - only share it with people who may see them.
 - Writing guild notes and changing guild ranks is reserved for the Blizzard UI in WoW: Forever, so do this in the guild window. The addon shows these menu entries greyed out.
 
 ## 7. Other officers

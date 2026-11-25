@@ -28,6 +28,22 @@ local function describe(parsed)
     return table.concat(lines, "\n")
 end
 
+-- Result of parsing an assignment code (errors and warnings like the Discord import).
+local function describeShare(parsed)
+    local lines = {}
+    for _, e in ipairs(parsed.errors) do
+        lines[#lines + 1] = string.format("|cffff4444%s|r %s %s", L.IMPORT_LINE:format(e.line), L[e.msg], e.detail or "")
+    end
+    for i, w in ipairs(parsed.warnings) do
+        if i > 12 then
+            lines[#lines + 1] = string.format(L.IMPORT_MORE_WARNINGS, #parsed.warnings - 12)
+            break
+        end
+        lines[#lines + 1] = string.format("|cffffaa00%s|r %s %s", L.IMPORT_LINE:format(w.line), L[w.msg], w.detail or "")
+    end
+    return table.concat(lines, "\n")
+end
+
 local function create(parent)
     local f = CreateFrame("Frame", nil, parent)
 
@@ -42,6 +58,29 @@ local function create(parent)
 
     local importBtn = W.Button(f, L.IMPORT_BUTTON, 160, 24, function()
         local text = eb:GetText()
+        -- a code with shared assignments of another officer
+        if ns.Share.IsCode(text) then
+            local parsed = ns.Share.Parse(text)
+            f.result:SetText(describeShare(parsed))
+            if parsed.ok then
+                local c = parsed.counts
+                local msg = string.format(L.SHARE_IMPORT_CONFIRM, parsed.created ~= "" and parsed.created or "-",
+                    c.L or 0, c.R or 0, (c.T or 0) + (c.M or 0), (c.ID or 0) + (c.IC or 0))
+                local guild = ns.DB.GuildName() or ""
+                if parsed.guild and parsed.guild ~= "" and parsed.guild ~= guild then
+                    msg = msg .. "\n\n" .. string.format(L.SHARE_GUILD_OTHER, parsed.guild, guild)
+                end
+                ns.Dialogs.ShowConfirm(L.SHARE_IMPORT_TITLE, msg, function()
+                    local n = ns.Engine.ImportDecisions(parsed)
+                    local done = string.format(L.SHARE_IMPORTED, n)
+                    f.result:SetText("|cff44ff44" .. done .. "|r")
+                    ns.Engine.Print(done)
+                    eb:SetText("")
+                    eb:ClearFocus()
+                end)
+            end
+            return
+        end
         local parsed = ns.Engine.Import(text)
         f.result:SetText(describe(parsed))
         if parsed.ok then

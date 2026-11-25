@@ -25,6 +25,7 @@ Core\Util.lua
 Matching\Text.lua
 Matching\Similarity.lua
 Data\Import.lua
+Data\Share.lua
 Matching\Players.lua
 Matching\Matcher.lua
 Matching\Ranks.lua

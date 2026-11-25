@@ -57,25 +57,65 @@ local function create()
     local close = CreateFrame("Button", nil, main, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -2, -2)
 
-    -- tab buttons
+    -- tabs below the window like in the character or guild window; plain buttons above the content
+    -- if this client does not know the tab templates
     main.tabButtons = {}
+    local template
+    for _, name in ipairs({ "PanelTabButtonTemplate", "CharacterFrameTabButtonTemplate" }) do
+        local ok, tab = pcall(CreateFrame, "Button", nil, main, name)
+        if ok and tab then
+            tab:Hide()
+            template = name
+            break
+        end
+    end
+    main.useTabs = template ~= nil and PanelTemplates_SetTab ~= nil
     local prev
     for i, def in ipairs(UI.tabs) do
-        local b = W.Button(main, def.title, 130, 24, function()
-            UI.SelectTab(def.key)
-        end)
-        if prev then
-            b:SetPoint("LEFT", prev, "RIGHT", 4, 0)
+        local b
+        if main.useTabs then
+            b = CreateFrame("Button", "TheGuildRegistrarFrameTab" .. i, main, template)
+            b:SetID(i)
+            b:SetText(def.title)
+            if PanelTemplates_TabResize then
+                PanelTemplates_TabResize(b, 0)
+            end
+            b:SetScript("OnClick", function()
+                UI.SelectTab(def.key)
+                if PlaySound and SOUNDKIT and SOUNDKIT.IG_CHARACTER_INFO_TAB then
+                    PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB)
+                end
+            end)
+            if prev then
+                b:SetPoint("TOPLEFT", prev, "TOPRIGHT", template == "PanelTabButtonTemplate" and 2 or -14, 0)
+            else
+                b:SetPoint("TOPLEFT", main, "BOTTOMLEFT", 10, 2)
+            end
         else
-            b:SetPoint("TOPLEFT", 14, -36)
+            b = W.Button(main, def.title, 130, 24, function()
+                UI.SelectTab(def.key)
+            end)
+            if prev then
+                b:SetPoint("LEFT", prev, "RIGHT", 4, 0)
+            else
+                b:SetPoint("TOPLEFT", 14, -36)
+            end
         end
         b.key = def.key
+        b.index = i
         main.tabButtons[i] = b
         prev = b
     end
+    if main.useTabs then
+        main.Tabs = main.tabButtons
+        main.numTabs = #main.tabButtons
+        if PanelTemplates_SetNumTabs then
+            PanelTemplates_SetNumTabs(main, #main.tabButtons)
+        end
+    end
 
     main.content = CreateFrame("Frame", nil, main)
-    main.content:SetPoint("TOPLEFT", 12, -66)
+    main.content:SetPoint("TOPLEFT", 12, main.useTabs and -36 or -66)
     main.content:SetPoint("BOTTOMRIGHT", -12, 30)
 
     -- status line
@@ -112,13 +152,21 @@ function UI.SelectTab(key)
             f:Hide()
         end
     end
-    for _, b in ipairs(main.tabButtons) do
-        if b.key == key then
-            b:LockHighlight()
-            b:GetFontString():SetTextColor(1, 1, 1)
-        else
-            b:UnlockHighlight()
-            b:GetFontString():SetTextColor(1, 0.82, 0)
+    if main.useTabs then
+        for _, b in ipairs(main.tabButtons) do
+            if b.key == key then
+                PanelTemplates_SetTab(main, b.index)
+            end
+        end
+    else
+        for _, b in ipairs(main.tabButtons) do
+            if b.key == key then
+                b:LockHighlight()
+                b:GetFontString():SetTextColor(1, 1, 1)
+            else
+                b:UnlockHighlight()
+                b:GetFontString():SetTextColor(1, 0.82, 0)
+            end
         end
     end
     UI.currentTab = key

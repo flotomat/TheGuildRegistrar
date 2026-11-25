@@ -189,6 +189,26 @@ function Engine.Import(text)
     return parsed
 end
 
+-- Code with the manual decisions of the current guild for other officers. Returns text, count.
+function Engine.ExportDecisions()
+    local g = ns.DB.Guild()
+    if not g then
+        return nil, 0
+    end
+    return ns.Share.Export(g.decisions, ns.DB.GuildName() or "", date("!%Y-%m-%dT%H:%M:%SZ"))
+end
+
+-- Merge a parsed decisions code (ns.Share.Parse) into the current guild. Returns the number of changes.
+function Engine.ImportDecisions(parsed)
+    local g = ns.DB.Guild()
+    if not g or not parsed or not parsed.ok then
+        return 0
+    end
+    local n = ns.Share.Merge(g.decisions, parsed)
+    Engine.Run()
+    return n
+end
+
 -- Delete the imported Discord list and all decisions of the current guild.
 function Engine.DeleteImportedData()
     if ns.demoActive then
@@ -219,35 +239,76 @@ local function decisions()
     return g and g.decisions
 end
 
-function Engine.Confirm(memberKey, charFullName)
+-- A Discord account can own several characters: every character has its own fixed assignment
+-- (links) and every Discord member / character pair can be separated (rejected).
+
+-- Fix characters to a Discord member ("confirm"). `chars` is a full name or a list of full names.
+function Engine.Confirm(memberKey, chars)
     local d = decisions()
     if not d then
         return
     end
-    d.confirmed[memberKey] = charFullName
-    d.rejected[ns.Matcher.pairKey(memberKey, charFullName)] = nil
+    for _, charFullName in ipairs(type(chars) == "table" and chars or { chars }) do
+        d.links[charFullName] = memberKey
+        d.rejected[ns.Matcher.pairKey(memberKey, charFullName)] = nil
+    end
     Engine.Run()
 end
 
-function Engine.Reject(memberKey, charFullName)
+-- Remove fixed assignments to this member (back to automatic assignment, nothing is separated).
+function Engine.Unconfirm(memberKey, chars)
+    local d = decisions()
+    if not d then
+        return
+    end
+    for _, charFullName in ipairs(type(chars) == "table" and chars or { chars }) do
+        if d.links[charFullName] == memberKey then
+            d.links[charFullName] = nil
+        end
+    end
+    Engine.Run()
+end
+
+-- Separate a character (with its group) from a Discord member: it is no longer assigned to it
+-- automatically. Undo with Engine.ResetMember.
+function Engine.Unlink(memberKey, charFullName)
     local d = decisions()
     if not d then
         return
     end
     d.rejected[ns.Matcher.pairKey(memberKey, charFullName)] = true
-    if d.confirmed[memberKey] == charFullName then
-        d.confirmed[memberKey] = nil
+    if d.links[charFullName] == memberKey then
+        d.links[charFullName] = nil
     end
     Engine.Run()
 end
+Engine.Reject = Engine.Unlink
 
--- Remove all manual decisions for a Discord member.
+-- True if one of the characters is fixed to this member.
+function Engine.IsConfirmed(memberKey, chars)
+    local d = decisions()
+    if not d then
+        return false
+    end
+    for _, charFullName in ipairs(type(chars) == "table" and chars or { chars }) do
+        if d.links[charFullName] == memberKey then
+            return true
+        end
+    end
+    return false
+end
+
+-- Remove all manual decisions for a Discord member (fixed assignments and separations).
 function Engine.ResetMember(memberKey)
     local d = decisions()
     if not d then
         return
     end
-    d.confirmed[memberKey] = nil
+    for charFullName, key in pairs(d.links) do
+        if key == memberKey then
+            d.links[charFullName] = nil
+        end
+    end
     local prefix = memberKey .. "\001"
     for k in pairs(d.rejected) do
         if k:sub(1, #prefix) == prefix then
@@ -255,6 +316,30 @@ function Engine.ResetMember(memberKey)
         end
     end
     Engine.Run()
+end
+
+-- Find a Discord member of the last run by display name (exact, then unique beginning).
+function Engine.FindMember(name)
+    local res = state.results
+    local key = ns.Text.key(name or "")
+    if key == "" or not res then
+        return nil
+    end
+    local found
+    for _, m in ipairs(res.members or {}) do
+        local k = ns.Text.key(m.display)
+        if k == key then
+            return m
+        end
+        if k:sub(1, #key) == key then
+            if found then
+                found = false -- ambiguous
+            elseif found == nil then
+                found = m
+            end
+        end
+    end
+    return found or nil
 end
 
 function Engine.SetIgnoredMember(memberKey, ignored)
@@ -306,6 +391,8 @@ function Engine.SetAltOf(charFullName, mainFullName)
     end
     d.twinkOf[charFullName] = main.fullName
     d.markedMain[charFullName] = nil
+    -- it now follows its main (and the main's Discord account)
+    d.links[charFullName] = nil
     Engine.Run()
     return true
 end
@@ -342,8 +429,10 @@ function Engine.HasDecision(memberKey)
     if not d then
         return false
     end
-    if d.confirmed[memberKey] then
-        return true
+    for _, key in pairs(d.links) do
+        if key == memberKey then
+            return true
+        end
     end
     local prefix = memberKey .. "\001"
     for k in pairs(d.rejected) do

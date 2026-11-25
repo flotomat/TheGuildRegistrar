@@ -31,19 +31,42 @@ local function create(parent)
 
     -- notes ---------------------------------------------------------------------------
     section(f, "OPT_SECTION_NOTES", x1, y)
-    controls.useNote = W.Check(f, L.OPT_USE_NOTE, function(_, v)
-        settings().useNote = v
+    local notesLabel = W.Label(f, L.OPT_NOTES_USED, "GameFontHighlight")
+    notesLabel:SetPoint("TOPLEFT", x1 + 4, y - 28)
+    controls.notes = W.Cycle(f, 230, {
+        { value = "both", text = L.NOTES_SOURCE_BOTH },
+        { value = "public", text = L.NOTES_SOURCE_PUBLIC },
+        { value = "officer", text = L.NOTES_SOURCE_OFFICER },
+        { value = "none", text = L.NOTES_SOURCE_NONE },
+    }, function()
+        local s = settings()
+        if not s then
+            return "both"
+        elseif s.useNote and s.useOfficerNote then
+            return "both"
+        elseif s.useNote then
+            return "public"
+        elseif s.useOfficerNote then
+            return "officer"
+        end
+        return "none"
+    end, function(v)
+        local s = settings()
+        s.useNote = (v == "both" or v == "public")
+        s.useOfficerNote = (v == "both" or v == "officer")
         rerun()
     end)
-    controls.useNote:SetPoint("TOPLEFT", x1, y - 22)
-    controls.useOfficerNote = W.Check(f, L.OPT_USE_OFFICER_NOTE, function(_, v)
-        settings().useOfficerNote = v
-        rerun()
-    end, L.OPT_USE_OFFICER_NOTE_TOOLTIP)
-    controls.useOfficerNote:SetPoint("TOPLEFT", x1 + 230, y - 22)
+    controls.notes:SetPoint("TOPLEFT", x1 + 150, y - 24)
+    W.Tooltip(controls.notes, L.OPT_NOTES_USED, function()
+        return L.NOTES_SOURCE_TOOLTIP .. "\n\n" .. L.OPT_USE_OFFICER_NOTE_TOOLTIP
+    end)
+    local notesHint = W.Localized(W.Label(f, "", "GameFontDisableSmall"), "OPT_NOTES_HINT")
+    notesHint:SetPoint("TOPLEFT", x1 + 4, y - 50)
+    notesHint:SetWidth(480)
+    notesHint:SetJustifyV("TOP")
 
     -- naming rule ------------------------------------------------------------------------
-    y = y - 60
+    y = y - 76
     section(f, "OPT_SECTION_RULE", x1, y)
     controls.ruleEnabled = W.Check(f, L.OPT_RULE_ENABLED, function(_, v)
         settings().nameRule.enabled = v
@@ -276,8 +299,7 @@ local function create(parent)
         if not s then
             return
         end
-        controls.useNote:SetChecked(s.useNote)
-        controls.useOfficerNote:SetChecked(s.useOfficerNote)
+        controls.notes.Refresh()
         controls.ruleEnabled:SetChecked(s.nameRule.enabled)
         controls.separator:SetText(s.nameRule.separator or "|")
         controls.order.Refresh()

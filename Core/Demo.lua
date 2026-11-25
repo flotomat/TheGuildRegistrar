@@ -37,6 +37,7 @@ end
 Demo.ROSTER = {
     char("Wurstinator", 3, "WARRIOR", 60, "Wursti", "", true),
     char("Wurstbrot", 5, "MAGE", 34, "Twink von Wurstinator", ""),
+    char("Heilkraut", 4, "PRIEST", 40, "", "DC: Jens"),
     char("Rolf", 2, "PALADIN", 60, "Fluffy, Tank", "DC: Fluffy", true),
     char("Gamblergirl", 4, "PRIEST", 60, "Anna, Heiler", ""),
     char("Annaheal", 5, "DRUID", 42, "Anna Twink", ""),
