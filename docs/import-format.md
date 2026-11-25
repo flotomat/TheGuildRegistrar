@@ -44,8 +44,8 @@ IC;Ohnediscord-Realm
 | `#TGRD1;<created>;<guild>` | header (required) |
 | `L;<character>;<Discord name>` | character fixed to a Discord member (confirmed) |
 | `R;<Discord name>;<character>` | character separated from a Discord member |
-| `T;<character>;<main>` | character is a twink/alt of a main |
-| `M;<character>` | character is a main (never a twink) |
+| `T;<character>;<main>` | character is an alt/twink of a main |
+| `M;<character>` | character is a main (never an alt) |
 | `ID;<Discord name>` / `IC;<character>` | Discord member / character ignored |
 
 Characters are full names (`Name-Realm`), Discord names the display names of the Discord export. The code contains Discord names and assignments: only share it with people who may see them.

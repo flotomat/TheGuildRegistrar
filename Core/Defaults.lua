@@ -3,6 +3,9 @@
 
 local _, ns = ...
 
+-- German players say "Twink", English players "alt": the default term and note template follow the game language.
+local GERMAN = (ns.activeLocale == "deDE")
+
 -- Game actions the addon could perform, but which Blizzard reserves for its own UI.
 -- WoW: Forever (1.60.x) blocks addons from writing guild notes (C_GuildInfo.SetNote - refused
 -- even on a direct click, "blocked from an action only available to the Blizzard UI") and from
@@ -20,7 +23,7 @@ ns.DEFAULT_SETTINGS = {
     useOfficerNote = true,
 
     -- what alternative characters are called in the addon: "twink" | "alt"
-    altTerm = (ns.activeLocale == "deDE") and "twink" or "alt",
+    altTerm = GERMAN and "twink" or "alt",
 
     -- check that the guild note contains the expected text (note templates below): "officer" | "public" | "off"
     noteCheck = "officer",
@@ -93,7 +96,7 @@ ns.DEFAULT_SETTINGS = {
 
     -- note templates: used for suggestions, the note check and (if allowed) writing notes
     noteTemplate = "DC: {discord}",
-    twinkNoteTemplate = "Twink {main}",
+    twinkNoteTemplate = GERMAN and "Twink {main}" or "Alt of {main}",
     noteWriteMode = "append", -- "append" | "replace"
 }
 

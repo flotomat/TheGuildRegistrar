@@ -125,7 +125,7 @@ local function create(parent)
         { value = "alt", text = L.OPT_ALT_TERM_ALT },
     }, function()
         local s = settings()
-        return s and s.altTerm or "twink"
+        return s and s.altTerm or ns.DEFAULT_SETTINGS.altTerm
     end, function(v)
         settings().altTerm = v
         ns.SetAltTerm(v)

@@ -28,10 +28,10 @@ Member and role IDs are used only internally to put this together and are **not 
 - **Network:** Peasant talks only to the official Discord API (`discord.com`). Its user interface runs in your browser but is only reachable from your own PC (`127.0.0.1`, protected by a random key).
 - **Export:** the list is copied to your clipboard and shown on the app's page. It is **not saved to a file** and is gone when you close the app. (Version 0.1.0 saved it as `last-export.txt`; newer versions delete that file on start.) Only if you use the command line yourself (`export -out FILE`) is a file written - where you say.
 - **Clipboard:** Windows clipboard history (Win+V) or clipboard sync between devices (Windows cloud clipboard, Apple Universal Clipboard, clipboard managers) can capture the copied list. If you use such features, clear the clipboard after the import or turn them off for this.
-- **In the game:** the imported list, your settings and your decisions (which Discord name belongs to which character, rejected matches, ignored entries, which character is a twink/alt of which main) are stored in the addon's saved variables (`WTF/Account/<account>/SavedVariables/TheGuildRegistrar.lua`), separately for each guild. They belong to your WoW account on the PC you play on and are shared by all characters of that account - so data of a guild you have left, or of a guild only another character of yours is in, stays there until you delete it. Saved variables stay on your PC; the addon does not send any addon messages to other players. Other guild members only have such data if they import a list themselves.
+- **In the game:** the imported list, your settings and your decisions (which Discord name belongs to which character, rejected matches, ignored entries, which character is an alt/twink of which main) are stored in the addon's saved variables (`WTF/Account/<account>/SavedVariables/TheGuildRegistrar.lua`), separately for each guild. They belong to your WoW account on the PC you play on and are shared by all characters of that account - so data of a guild you have left, or of a guild only another character of yours is in, stays there until you delete it. Saved variables stay on your PC; the addon does not send any addon messages to other players. Other guild members only have such data if they import a list themselves.
 - **Guild notes and ranks:** the addon does not change guild notes or ranks - WoW: Forever reserves this for the Blizzard UI. It can show a note suggestion that you copy and paste in the guild window yourself. A **public note** can be read by **every guild member**, an officer note only by those whose rank may see officer notes.
-- **Exported result list:** the export in the Comparison tab contains statuses, Discord names, mains, twinks, rank mismatches and hints. Where it goes is up to you.
-- **Shared assignments:** *Share assignments* in the Comparison tab creates a code with your manual decisions (Discord names, character names, which character belongs to which Discord account, twinks, ignored entries). The addon does not send it anywhere; it is shown for copying. Whoever pastes it into their Import tab stores these decisions in their own saved variables.
+- **Exported result list:** the export in the Comparison tab contains statuses, Discord names, mains, alts, rank mismatches and hints. Where it goes is up to you.
+- **Shared assignments:** *Share assignments* in the Comparison tab creates a code with your manual decisions (Discord names, character names, which character belongs to which Discord account, alts, ignored entries). The addon does not send it anywhere; it is shown for copying. Whoever pastes it into their Import tab stores these decisions in their own saved variables.
 
 ### What is stored, and how to delete it
 
@@ -50,15 +50,15 @@ To remove everything: "Remove token" in the app, delete the config folder and th
 
 ### Your responsibility
 
-The Guild Registrar is a tool. Whoever uses it for a guild decides about purpose and scope - and may therefore be the **controller** within the meaning of the GDPR or similar laws. Discord names are personal data, and linking them to characters (main and twinks) creates new information about your members.
+The Guild Registrar is a tool. Whoever uses it for a guild decides about purpose and scope - and may therefore be the **controller** within the meaning of the GDPR or similar laws. Discord names are personal data, and linking them to characters (main and alts) creates new information about your members.
 
 Recommendations:
 
 - **Inform your members**, e.g. in a rules or info channel: that Discord names and roles are compared with the guild roster, why (guild management) and who has access (including the officers you gave an invite code).
 - **Only as much as needed:** prefer the *officer note* for Discord names. A public note is visible to all guild members.
 - **Share the bot with care:** an invite code gives another officer the same bot token (encrypted with a password; after redeeming it is stored protected on their PC like your own). Whoever has it can read the member list and do what `@everyone` may do on your server. Only give codes to officers who need them, send code and password by different ways, and reset the token when someone should no longer have access. The developer is not involved; the code never passes through any server of the project.
-- **Share assignment codes with care:** they contain Discord names and assignments including twinks. Only give them to officers who need them.
-- **Share exports with care:** the exported list contains assignments and twinks. Only post what the people concerned really need (e.g. just the names, without twinks).
+- **Share assignment codes with care:** they contain Discord names and assignments including alts. Only give them to officers who need them.
+- **Share exports with care:** the exported list contains assignments and alts. Only post what the people concerned really need (e.g. just the names, without alts).
 - **Delete when no longer needed**, e.g. when you are no longer an officer or leave the guild.
 - Follow the [Discord Developer Terms of Service](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service) and the [Discord Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy), which also apply to your own bot.
 
