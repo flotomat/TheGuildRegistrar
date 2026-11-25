@@ -8,6 +8,8 @@ Die einmalige Einrichtung dauert etwa 10 Minuten. Du brauchst:
 - einen PC mit Windows, macOS oder Linux,
 - auf eurem Discord-Server das Recht **Server verwalten** - oder jemanden, der es hat und einmal einen Link für dich öffnet.
 
+> **Du bist Offizier und dein Gildenmeister hat den Bot schon eingerichtet?** Dann brauchst du keinen eigenen Bot: Schritt 1 ausführen, danach direkt zu [Weitere Offiziere](#7-weitere-offiziere).
+
 ## 1. Hilfsprogramm Peasant herunterladen und starten
 
 1. Öffne das [aktuelle Release](https://github.com/Flotomat/TheGuildRegistrar/releases/latest) und lade die Datei für dein System herunter:
@@ -63,11 +65,33 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 - Im Tab **Abgleich** zeigt die Spalte *Anpassen* (und der Tooltip), was zu ändern ist: Gildenrang, Twink-Kennzeichnung, Gildennotiz, Zuordnung, Discord-Name. Per Rechtsklick Zuordnungen bestätigen, ablehnen oder ändern, Charaktere als Twink eines Mains zuordnen, Spieler anflüstern oder einen Notiz-Vorschlag kopieren. Ein Klick auf **+** klappt die Twinks eines Spielers aus.
 - Gildennotizen schreiben und Gildenränge ändern behält WoW: Forever dem Blizzard-Interface vor - das erledigst du im Gildenfenster. Im Addon sind diese Menüpunkte ausgegraut.
 
+## 7. Weitere Offiziere
+
+Damit nicht jeder Offizier einen eigenen Bot braucht, kann der Gildenmeister (oder wer den Bot eingerichtet hat) den Bot mit einem **Einladungscode** teilen. Der Code enthält das Bot-Token, verschlüsselt mit einem Passwort; angezeigt wird das Token nie.
+
+**Gildenmeister - Code erzeugen (einmal pro Offizier oder für alle gemeinsam):**
+
+1. Peasant starten, im Abschnitt **Weitere Offiziere** die Art des Passworts wählen:
+   - **Starkes Passwort erzeugen (empfohlen)** - z. B. `K7QF-2MXP-...`, gut zum Kopieren.
+   - **Passwort selbst festlegen** - z. B. wenn du es im Sprachchat durchsagen willst. Peasant zeigt dabei grob an, wie stark es ist (Länge, Groß-/Kleinbuchstaben, Ziffern, Sonderzeichen, Vielfalt). Wie stark es sein soll, entscheidest du; bei einem schwachen Passwort fragt Peasant nach.
+2. **Einladungscode erzeugen** klicken.
+3. Code und Passwort **auf verschiedenen Wegen** weitergeben, z. B. den Code als Discord-Direktnachricht und das Passwort im Sprachchat oder per Flüstern im Spiel. Nie in einen Kanal posten. Peasant speichert weder Code noch Passwort.
+
+**Offizier - Code einlösen:**
+
+1. Peasant herunterladen und starten (Schritt 1).
+2. Im Abschnitt **Offizier mit Einladungscode?** Code und Passwort einfügen und **Einlösen** klicken.
+3. Fertig - weiter mit Schritt 5 (Exportieren). Der Server ist schon ausgewählt. Das Token wird wie in Schritt 3 geschützt auf deinem PC gespeichert.
+
+**Zugriff entziehen** (z. B. wenn ein Offizier die Gilde verlässt): Token im Developer Portal zurücksetzen (Schritt 2.6), das neue Token in Peasant einfügen und den verbleibenden Offizieren neue Codes geben. Alte Codes funktionieren danach nicht mehr.
+
+Gut zu wissen: Wer einen Code hat, kann den Bot vollständig nutzen - die Mitgliederliste lesen und alles tun, was die Rolle `@everyone` auf eurem Server darf. Gib Codes daher nur an Personen, denen du auch das Token geben würdest.
+
 ## Datenschutz
 
 Alle Daten bleiben auf deinem PC; das Projekt hat keinen Server und keine Telemetrie. **Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich** (z. B. nach der DSGVO):
 
-- Informiere deine Mitglieder, dass ihre Discord-Namen und Rollen mit der Gildenliste abgeglichen werden.
+- Informiere deine Mitglieder, dass ihre Discord-Namen und Rollen mit der Gildenliste abgeglichen werden - und wer Zugriff hat (z. B. welche Offiziere einen Einladungscode haben).
 - Schreibe Discord-Namen bevorzugt in Offiziersnotizen - öffentliche Notizen sieht die ganze Gilde.
 - Nutzt du einen Zwischenablageverlauf oder eine Synchronisierung der Zwischenablage, leere sie nach dem Import.
 - Lösche die Daten, wenn du sie nicht mehr brauchst: Tab Import → **Importierte Daten löschen** (aktuelle Gilde) oder **Daten aller Gilden löschen** (auch verlassene Gilden; oder `/tgr wipe` eingeben).
@@ -81,6 +105,9 @@ Details: [privacy.md](privacy.md#deutsch).
 | „Discord akzeptiert dieses Token nicht“ | Token auf der Bot-Seite zurücksetzen und das neue einfügen. |
 | „Der Bot darf die Mitgliederliste nicht lesen“ | *Server Members Intent* einschalten (Schritt 2.4) und speichern. |
 | Kein Server in der Liste | Der Bot wurde noch nicht eingeladen oder auf einen anderen Server. |
+| „Kein gültiger Einladungscode“ | Den ganzen Code kopieren - er beginnt mit `TGRK1-`. |
+| „Falsches Passwort“ | Passwort prüfen (bei selbst festgelegten Passwörtern auf Groß-/Kleinschreibung achten) oder einen neuen Code anfordern. |
+| Offizier: „Token aus deinem Einladungscode ist nicht mehr gültig“ | Der Gildenmeister hat das Token zurückgesetzt - beim Gildenmeister einen neuen Code anfordern. |
 | Einfügen in WoW passiert nichts | Erst in das große Textfeld klicken. Das Programm zeigt den Text zusätzlich in einem Feld zum manuellen Kopieren. |
 | Viele Mitglieder „nicht zugewiesen“ | Namensregel und Rang-Zuordnung prüfen, Twink-Ränge markieren, Zuordnungen manuell bestätigen. |
 | Alles wieder entfernen | Im Addon: Tab Import → **Daten aller Gilden löschen** oder `/tgr wipe` (um auch die Einstellungen zu entfernen, bei beendetem Spiel `WTF/Account/<Account>/SavedVariables/TheGuildRegistrar.lua` löschen). Im Programm **Token entfernen** und den Konfigurationsordner löschen ([privacy.md](privacy.md#deutsch)); im Developer Portal die Anwendung löschen; den Bot vom Server werfen. |

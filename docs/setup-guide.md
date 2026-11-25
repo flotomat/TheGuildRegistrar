@@ -8,6 +8,8 @@ One-time setup takes about 10 minutes. You need:
 - a PC with Windows, macOS or Linux,
 - on your Discord server: the permission **Manage Server** - or someone who has it and opens one link for you.
 
+> **You are an officer and your guild master already set up the bot?** Then you do not need your own bot: do step 1, then go straight to [Other officers](#7-other-officers).
+
 ## 1. Download and start Peasant (helper app)
 
 1. Open the [latest release](https://github.com/Flotomat/TheGuildRegistrar/releases/latest) and download the file for your system:
@@ -63,11 +65,33 @@ To update the list later: start the app → **Export to clipboard** → paste in
 - In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Right-click entries to confirm, reject or reassign matches, assign a character as alt of a main, whisper players or copy a note suggestion. Click **+** to show the alts of a player.
 - Writing guild notes and changing guild ranks is reserved for the Blizzard UI in WoW: Forever, so do this in the guild window. The addon shows these menu entries greyed out.
 
+## 7. Other officers
+
+So that not every officer needs their own bot, the guild master (or whoever set up the bot) can share it with an **invite code**. The code contains the bot token, encrypted with a password; the token itself is never shown.
+
+**Guild master - create a code (once per officer, or one for all):**
+
+1. Start Peasant and choose the kind of password in the **Other officers** section:
+   - **Generate a strong password (recommended)** - e.g. `K7QF-2MXP-...`, easy to copy.
+   - **Choose my own password** - e.g. if you want to say it in voice chat. Peasant gives a rough rating of its strength (length, upper/lower case, digits, special characters, variety). How strong it has to be is your decision; for a weak password Peasant asks you to confirm.
+2. Click **Create invite code**.
+3. Give code and password **by different ways**, e.g. the code as a Discord direct message and the password by voice or an in-game whisper. Never post them in a channel. Peasant saves neither the code nor the password.
+
+**Officer - redeem the code:**
+
+1. Download and start Peasant (step 1).
+2. In the section **Officer with an invite code?**, paste code and password and click **Redeem**.
+3. Done - continue with step 5 (export). The server is already selected. The token is stored protected on your PC as in step 3.
+
+**Take access away** (e.g. when an officer leaves the guild): reset the token in the Developer Portal (step 2.6), paste the new token into Peasant and give new codes to the remaining officers. Old codes stop working.
+
+Good to know: whoever has a code can fully use the bot - read the member list and do everything the `@everyone` role may do on your server. Only give codes to people you would also give the token to.
+
 ## Privacy
 
 All data stays on your PC; the project has no server and no telemetry. **You decide what happens with your members' data and are responsible for it** (e.g. under the GDPR):
 
-- Tell your members that their Discord names and roles are compared with the guild roster.
+- Tell your members that their Discord names and roles are compared with the guild roster - and who has access (e.g. which officers have an invite code).
 - Prefer officer notes for Discord names - public notes are visible to the whole guild.
 - If you use clipboard history or clipboard sync, clear the clipboard after the import.
 - Delete the data when you no longer need it: Import tab → **Delete imported data** (current guild) or **Delete data of all guilds** (also guilds you have left; or type `/tgr wipe`).
@@ -81,6 +105,9 @@ Details: [privacy.md](privacy.md).
 | "Discord does not accept this token" | Reset the token on the Bot page and paste the new one. |
 | "The bot may not read the member list" | Switch on *Server Members Intent* (step 2.4) and save. |
 | No server in the list | The bot was not invited yet, or the invite went to another server. |
+| "This is not a valid invite code" | Copy the whole code - it starts with `TGRK1-`. |
+| "Wrong password" | Check the password (own passwords are case sensitive) or ask for a new code. |
+| Officer: "The token from your invite code is no longer valid" | The guild master reset the token - ask them for a new code. |
 | Pasting in WoW does nothing | Click into the big text field first. The app also shows the text in a field to copy manually. |
 | Many members "unassigned" | Check the naming rule and the rank mapping; add twink ranks; confirm matches manually. |
 | I want to remove everything | In the addon: Import tab → **Delete data of all guilds** or `/tgr wipe` (to remove the settings too, delete `WTF/Account/<account>/SavedVariables/TheGuildRegistrar.lua` with the game closed). In the app click **Remove token** and delete the config folder ([privacy.md](privacy.md)); in the Developer Portal delete the application; kick the bot from your server. |

@@ -60,6 +60,9 @@ func runServer(open bool) error {
 	mux.HandleFunc("/api/token", s.api(s.handleToken))
 	mux.HandleFunc("/api/guilds", s.api(s.handleGuilds))
 	mux.HandleFunc("/api/export", s.api(s.handleExport))
+	mux.HandleFunc("/api/invite", s.api(s.handleInvite))
+	mux.HandleFunc("/api/invite/rate", s.api(s.handleInviteRate))
+	mux.HandleFunc("/api/invite/redeem", s.api(s.handleInviteRedeem))
 	mux.HandleFunc("/api/ping", s.api(s.handlePing))
 	mux.HandleFunc("/api/quit", s.api(s.handleQuit))
 	srv := &http.Server{Handler: s.guard(mux), ReadHeaderTimeout: 10 * time.Second}
@@ -168,6 +171,12 @@ func errorCode(err error) string {
 		return "invalid_token"
 	case errors.Is(err, ErrMissingIntent):
 		return "missing_intent"
+	case errors.Is(err, ErrInviteFormat):
+		return "invite_format"
+	case errors.Is(err, ErrInvitePassword):
+		return "invite_password"
+	case errors.Is(err, ErrEmptyPassword):
+		return "empty_password"
 	}
 	var apiErr *APIError
 	if errors.As(err, &apiErr) {
@@ -201,6 +210,7 @@ type stateResponse struct {
 	IncludeBots   bool    `json:"includeBots"`
 	TokenStorage  string  `json:"tokenStorage"`
 	TokenError    string  `json:"tokenError,omitempty"`
+	FromInvite    bool    `json:"fromInvite"`
 }
 
 func (s *server) handleState(r *http.Request) (any, error) {
@@ -209,6 +219,7 @@ func (s *server) handleState(r *http.Request) (any, error) {
 	st.HasToken = s.token != ""
 	st.GuildID = s.cfg.GuildID
 	st.IncludeBots = s.cfg.IncludeBots
+	st.FromInvite = s.cfg.FromInvite
 	s.mu.Unlock()
 	if !st.HasToken {
 		return st, nil
@@ -254,7 +265,10 @@ func (s *server) handleToken(r *http.Request) (any, error) {
 		}
 		s.mu.Lock()
 		s.token = token
+		s.cfg.FromInvite = false // own bot entered by hand
+		cfg := s.cfg
 		s.mu.Unlock()
+		_ = saveConfig(cfg)
 		return map[string]bool{"ok": true}, nil
 	case http.MethodDelete:
 		if err := deleteToken(); err != nil {
@@ -262,7 +276,10 @@ func (s *server) handleToken(r *http.Request) (any, error) {
 		}
 		s.mu.Lock()
 		s.token = ""
+		s.cfg.FromInvite = false
+		cfg := s.cfg
 		s.mu.Unlock()
+		_ = saveConfig(cfg)
 		return map[string]bool{"ok": true}, nil
 	}
 	return nil, errors.New("method not allowed")
@@ -306,6 +323,83 @@ func (s *server) handleExport(r *http.Request) (any, error) {
 	_ = saveConfig(cfg)
 	// the export is only returned to the page - it is not stored on disk or kept in the server
 	return map[string]any{"text": res.Text, "members": res.Members, "roles": res.Roles, "skipped": res.Skipped, "server": res.Server}, nil
+}
+
+// handleInvite creates an invite code for another officer. Without a password one is generated.
+// Neither the code nor the password is stored.
+func (s *server) handleInvite(r *http.Request) (any, error) {
+	if r.Method != http.MethodPost {
+		return nil, errors.New("method not allowed")
+	}
+	var body struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	s.mu.Lock()
+	token, guildID := s.token, s.cfg.GuildID
+	s.mu.Unlock()
+	if token == "" {
+		return nil, errors.New("no token configured")
+	}
+	password := strings.TrimSpace(body.Password)
+	generated := password == ""
+	if generated {
+		var err error
+		if password, err = GeneratePassword(); err != nil {
+			return nil, err
+		}
+	}
+	code, err := CreateInvite(token, guildID, password)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"code": code, "password": password, "generated": generated, "rating": RatePassword(password)}, nil
+}
+
+func (s *server) handleInviteRate(r *http.Request) (any, error) {
+	var body struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	return RatePassword(body.Password), nil
+}
+
+// handleInviteRedeem stores the token from an invite code like a token entered by hand.
+func (s *server) handleInviteRedeem(r *http.Request) (any, error) {
+	if r.Method != http.MethodPost {
+		return nil, errors.New("method not allowed")
+	}
+	var body struct {
+		Code     string `json:"code"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	inv, err := RedeemInvite(body.Code, body.Password)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := NewClient(inv.Token).Me(); err != nil {
+		return nil, err
+	}
+	if err := saveToken(inv.Token); err != nil {
+		return nil, fmt.Errorf("token is valid but could not be saved: %w", err)
+	}
+	s.mu.Lock()
+	s.token = inv.Token
+	s.cfg.FromInvite = true
+	if inv.GuildID != "" {
+		s.cfg.GuildID = inv.GuildID
+	}
+	cfg := s.cfg
+	s.mu.Unlock()
+	_ = saveConfig(cfg)
+	return map[string]bool{"ok": true}, nil
 }
 
 func (s *server) handlePing(r *http.Request) (any, error) {

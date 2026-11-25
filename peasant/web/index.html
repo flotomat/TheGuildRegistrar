@@ -44,6 +44,15 @@
   footer { margin-top: 28px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .lang button { padding: 4px 10px; font-size: 13px; }
   .lang button.active { border-color: var(--accent); color: var(--accent); }
+  .mode { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+  .meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 10px; overflow: hidden; }
+  .meter > div { height: 100%; width: 0; transition: width .2s, background .2s; }
+  .meter .weak { width: 33%; background: var(--err); }
+  .meter .medium { width: 66%; background: var(--warn); }
+  .meter .strong { width: 100%; background: var(--ok); }
+  .lvl-weak { color: var(--err); } .lvl-medium { color: var(--warn); } .lvl-strong { color: var(--ok); }
+  .secret { font: 14px ui-monospace, Consolas, monospace; word-break: break-all; }
+  label.field { display: block; margin-top: 10px; font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -63,6 +72,20 @@
     <div class="card">
       <h2 data-t="welcomeTitle"></h2>
       <p data-t="welcomeText"></p>
+    </div>
+
+    <div class="card">
+      <h2 data-t="redeemTitle"></h2>
+      <p data-t="redeemText"></p>
+      <label class="field" for="redeemCode" data-t="inviteCode"></label>
+      <input type="text" id="redeemCode" autocomplete="off" spellcheck="false">
+      <label class="field" for="redeemPassword" data-t="invitePassword"></label>
+      <div class="row" style="margin-top:4px">
+        <input type="password" id="redeemPassword" autocomplete="off" spellcheck="false">
+        <button class="primary" id="redeemBtn" data-t="redeem"></button>
+      </div>
+      <div id="redeemStatus" class="status hidden"></div>
+      <p class="muted small" data-t="redeemOwnBot"></p>
     </div>
 
     <div class="card step">
@@ -148,6 +171,38 @@
         <p data-t="s5Text"></p>
       </div>
     </div>
+
+    <div class="card" id="officersCard">
+      <h2 data-t="officersTitle"></h2>
+      <p data-t="officersText"></p>
+      <div class="mode">
+        <label><input type="radio" name="pwMode" value="auto" checked> <span data-t="pwAuto"></span></label>
+        <label><input type="radio" name="pwMode" value="manual"> <span data-t="pwManual"></span></label>
+      </div>
+      <div id="manualPw" class="hidden">
+        <label class="field" for="ownPassword" data-t="pwOwn"></label>
+        <div class="row" style="margin-top:4px">
+          <input type="password" id="ownPassword" autocomplete="new-password" spellcheck="false">
+          <label><input type="checkbox" id="showPw"> <span data-t="pwShow"></span></label>
+        </div>
+        <div class="meter"><div id="pwMeter"></div></div>
+        <div class="small" id="pwRating"></div>
+      </div>
+      <div class="row">
+        <button class="primary" id="createInvite" data-t="createInvite"></button>
+      </div>
+      <div id="inviteStatus" class="status hidden"></div>
+      <div id="inviteResult" class="hidden">
+        <label class="field" data-t="inviteCode"></label>
+        <textarea id="inviteCodeOut" readonly spellcheck="false" style="height:70px"></textarea>
+        <div class="row" style="margin-top:4px"><button id="copyCode" data-t="copyCode"></button></div>
+        <label class="field" data-t="invitePassword"></label>
+        <div class="row" style="margin-top:4px"><span class="secret" id="invitePwOut"></span> <button id="copyPw" data-t="copyPw"></button></div>
+        <p class="small" data-t="inviteSeparate"></p>
+        <p class="small muted" data-t="inviteNotStored"></p>
+      </div>
+      <p class="small muted" data-t="inviteRevoke"></p>
+    </div>
   </section>
 
   <div class="card">
@@ -224,6 +279,45 @@ const T = {
     confirmRemove: "Remove the saved token from this PC?",
     bye: "Peasant has stopped. You can close this tab.",
     botName: "Bot: ",
+    redeemTitle: "Officer with an invite code?",
+    redeemText: "If your guild master already set up the bot, you do not need your own bot: paste the invite code and the password you got from them. Steps 1 and 2 below are then not needed.",
+    redeemOwnBot: "No code? Then set up your own bot with steps 1 and 2.",
+    inviteCode: "Invite code",
+    invitePassword: "Password",
+    redeem: "Redeem",
+    redeemOk: "Invite redeemed - the bot is connected.",
+    invite_format: "This is not a valid invite code. Copy the whole code (it starts with TGRK1-).",
+    invite_password: "Wrong password, or the code is incomplete.",
+    empty_password: "Please enter a password.",
+    officersTitle: "Other officers",
+    officersText: "Other officers can use this bot without creating their own: create an invite code and give it to them together with the password. They paste both into Peasant - done. The code contains the bot token, encrypted with the password; the token itself is never shown.",
+    pwAuto: "Generate a strong password (recommended)",
+    pwManual: "Choose my own password",
+    pwOwn: "Your password",
+    pwShow: "Show",
+    createInvite: "Create invite code",
+    creating: "Encrypting...",
+    inviteCreated: "Invite code created.",
+    weakConfirm: "This password is weak - someone who gets the code could guess it and use your bot. Create the code anyway?",
+    copyCode: "Copy code",
+    copyPw: "Copy password",
+    copied: "Copied.",
+    inviteSeparate: "Send code and password by different ways, e.g. the code as a Discord direct message and the password by voice or an in-game whisper. Never post them in a channel.",
+    inviteNotStored: "Neither code nor password is saved - create a new code at any time.",
+    inviteRevoke: "Everyone with a code can use the bot (read the member list, and do what @everyone may do on the server). To take access away: reset the token in the Developer Portal, paste the new token here and give new codes to the remaining officers.",
+    lvl_weak: "Weak",
+    lvl_medium: "Medium",
+    lvl_strong: "Strong",
+    hintsPrefix: "Better: ",
+    hint_length: "at least 12 characters",
+    hint_lower: "lower case letters",
+    hint_upper: "upper case letters",
+    hint_digit: "digits",
+    hint_special: "special characters or spaces",
+    hint_variety: "fewer repeated or consecutive characters",
+    fromInviteInfo: "Connected with an invite code from your guild master.",
+    tokenSavedBadInvite: "The token from your invite code is no longer valid - the guild master probably reset it. Please ask them for a new invite code.",
+    intentMissingInvite: "Server Members Intent is OFF for this bot. Please ask your guild master to turn it on in the Developer Portal.",
   },
   de: {
     subtitle: "Hilfsprogramm des WoW-Addons The Guild Registrar: exportiert eure Discord-Mitgliederliste",
@@ -279,6 +373,45 @@ const T = {
     confirmRemove: "Gespeichertes Token von diesem PC entfernen?",
     bye: "Das Programm wurde beendet. Du kannst diesen Tab schließen.",
     botName: "Bot: ",
+    redeemTitle: "Offizier mit Einladungscode?",
+    redeemText: "Hat dein Gildenmeister den Bot schon eingerichtet, brauchst du keinen eigenen Bot: Füge den Einladungscode und das Passwort ein, die du von ihm bekommen hast. Die Schritte 1 und 2 unten entfallen dann.",
+    redeemOwnBot: "Kein Code? Dann richte mit den Schritten 1 und 2 einen eigenen Bot ein.",
+    inviteCode: "Einladungscode",
+    invitePassword: "Passwort",
+    redeem: "Einlösen",
+    redeemOk: "Einladung eingelöst - der Bot ist verbunden.",
+    invite_format: "Das ist kein gültiger Einladungscode. Kopiere den ganzen Code (er beginnt mit TGRK1-).",
+    invite_password: "Falsches Passwort oder der Code ist unvollständig.",
+    empty_password: "Bitte ein Passwort eingeben.",
+    officersTitle: "Weitere Offiziere",
+    officersText: "Weitere Offiziere können diesen Bot nutzen, ohne einen eigenen anzulegen: Erzeuge einen Einladungscode und gib ihn zusammen mit dem Passwort weiter. Sie fügen beides in Peasant ein - fertig. Der Code enthält das Bot-Token, verschlüsselt mit dem Passwort; das Token selbst wird nie angezeigt.",
+    pwAuto: "Starkes Passwort erzeugen (empfohlen)",
+    pwManual: "Passwort selbst festlegen",
+    pwOwn: "Dein Passwort",
+    pwShow: "Anzeigen",
+    createInvite: "Einladungscode erzeugen",
+    creating: "Verschlüssele...",
+    inviteCreated: "Einladungscode erzeugt.",
+    weakConfirm: "Dieses Passwort ist schwach - wer den Code bekommt, könnte es erraten und deinen Bot nutzen. Code trotzdem erzeugen?",
+    copyCode: "Code kopieren",
+    copyPw: "Passwort kopieren",
+    copied: "Kopiert.",
+    inviteSeparate: "Gib Code und Passwort auf verschiedenen Wegen weiter, z. B. den Code als Discord-Direktnachricht und das Passwort im Sprachchat oder per Flüstern im Spiel. Poste sie nie in einem Kanal.",
+    inviteNotStored: "Weder Code noch Passwort werden gespeichert - du kannst jederzeit einen neuen Code erzeugen.",
+    inviteRevoke: "Jeder mit einem Code kann den Bot nutzen (die Mitgliederliste lesen und tun, was @everyone auf dem Server darf). Zugriff entziehen: Token im Developer Portal zurücksetzen, das neue Token hier einfügen und den verbleibenden Offizieren neue Codes geben.",
+    lvl_weak: "Schwach",
+    lvl_medium: "Mittel",
+    lvl_strong: "Stark",
+    hintsPrefix: "Besser: ",
+    hint_length: "mindestens 12 Zeichen",
+    hint_lower: "Kleinbuchstaben",
+    hint_upper: "Großbuchstaben",
+    hint_digit: "Ziffern",
+    hint_special: "Sonderzeichen oder Leerzeichen",
+    hint_variety: "weniger wiederholte oder aufeinanderfolgende Zeichen",
+    fromInviteInfo: "Verbunden über einen Einladungscode deines Gildenmeisters.",
+    tokenSavedBadInvite: "Das Token aus deinem Einladungscode ist nicht mehr gültig - vermutlich hat der Gildenmeister es zurückgesetzt. Bitte ihn um einen neuen Einladungscode.",
+    intentMissingInvite: "Server Members Intent ist für diesen Bot AUS. Bitte deinen Gildenmeister, ihn im Developer Portal einzuschalten.",
   },
 };
 
@@ -327,12 +460,19 @@ function render() {
   $("ready").classList.toggle("hidden", !configured);
   $("removeToken").classList.toggle("hidden", !state.hasToken);
   $("storageInfo").textContent = t("storage") + state.tokenStorage;
-  if (state.tokenError) show($("tokenStatus"), "err", t("tokenSavedBad"));
+  if (state.tokenError) {
+    const msg = state.fromInvite ? t("tokenSavedBadInvite") : t("tokenSavedBad");
+    show($("tokenStatus"), "err", msg);
+    if (state.fromInvite) show($("redeemStatus"), "err", msg);
+  }
   if (!configured) return;
 
-  $("botInfo").textContent = t("botName") + state.botName;
+  $("botInfo").textContent = t("botName") + state.botName + (state.fromInvite ? " - " + t("fromInviteInfo") : "");
+  $("inviteCard").classList.toggle("hidden", state.fromInvite && state.guilds.length > 0);
+  $("officersCard").classList.toggle("hidden", !!state.fromInvite);
   const intent = $("intentStatus");
   if (state.membersIntent) { show(intent, "ok", t("intentOk")); }
+  else if (state.fromInvite) { show(intent, "warn", t("intentMissingInvite")); }
   else {
     show(intent, "warn", t("intentMissing") + " ");
     const a = document.createElement("a"); a.href = state.portalUrl; a.target = "_blank"; a.rel = "noopener"; a.textContent = t("openBotPage");
@@ -360,6 +500,7 @@ $("saveToken").addEventListener("click", async () => {
   try {
     await api("/api/token", { method: "POST", body: JSON.stringify({ token: $("tokenInput").value }) });
     $("tokenInput").value = "";
+    clearInvite();
     show(st, "ok", t("tokenOk"));
     await load();
   } catch (e) { show(st, "err", errText(e)); }
@@ -367,13 +508,85 @@ $("saveToken").addEventListener("click", async () => {
 
 $("reloadGuilds").addEventListener("click", load);
 
-async function copy(text) {
+async function copy(text, fallback) {
   try { await navigator.clipboard.writeText(text); return true; }
   catch (e) {
-    const ta = $("exportText"); ta.focus(); ta.select();
+    const el = fallback || $("exportText");
+    if (el.select) { el.focus(); el.select(); }
+    else { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
     try { return document.execCommand("copy"); } catch (_) { return false; }
   }
 }
+
+// --- invite codes: redeem (officer) ---
+$("redeemBtn").addEventListener("click", async () => {
+  const st = $("redeemStatus");
+  const btn = $("redeemBtn");
+  btn.disabled = true;
+  show(st, "warn", t("checking"));
+  try {
+    await api("/api/invite/redeem", { method: "POST", body: JSON.stringify({ code: $("redeemCode").value, password: $("redeemPassword").value }) });
+    $("redeemCode").value = ""; $("redeemPassword").value = "";
+    show(st, "ok", t("redeemOk"));
+    await load();
+  } catch (e) { show(st, "err", errText(e)); }
+  btn.disabled = false;
+});
+
+// --- invite codes: create (guild master) ---
+// an old code would contain the previous token: hide it whenever the token changes
+function clearInvite() {
+  $("inviteCodeOut").value = ""; $("invitePwOut").textContent = "";
+  $("inviteResult").classList.add("hidden"); $("inviteStatus").classList.add("hidden");
+}
+const pwMode = () => document.querySelector("input[name=pwMode]:checked").value;
+let lastRating = null;
+let rateTimer = null;
+function renderRating(r) {
+  lastRating = r;
+  const pw = $("ownPassword").value;
+  $("pwMeter").className = pw ? r.level : "";
+  if (!pw) { $("pwRating").textContent = ""; return; }
+  const el = $("pwRating");
+  el.textContent = "";
+  const lvl = document.createElement("strong"); lvl.className = "lvl-" + r.level; lvl.textContent = t("lvl_" + r.level);
+  el.appendChild(lvl);
+  if (r.level !== "strong" && r.hints.length) el.appendChild(document.createTextNode(" - " + t("hintsPrefix") + r.hints.map((h) => t("hint_" + h)).join(", ")));
+}
+async function rate() {
+  const pw = $("ownPassword").value;
+  try { renderRating(await api("/api/invite/rate", { method: "POST", body: JSON.stringify({ password: pw }) })); } catch (_) {}
+}
+document.querySelectorAll("input[name=pwMode]").forEach((r) => r.addEventListener("change", () => {
+  $("manualPw").classList.toggle("hidden", pwMode() !== "manual");
+  if (pwMode() === "manual") $("ownPassword").focus();
+}));
+$("ownPassword").addEventListener("input", () => { clearTimeout(rateTimer); rateTimer = setTimeout(rate, 150); });
+$("showPw").addEventListener("change", () => { $("ownPassword").type = $("showPw").checked ? "text" : "password"; });
+
+$("createInvite").addEventListener("click", async () => {
+  const st = $("inviteStatus");
+  const btn = $("createInvite");
+  let password = "";
+  if (pwMode() === "manual") {
+    password = $("ownPassword").value.trim();
+    if (!password) { show(st, "err", t("empty_password")); return; }
+    await rate();
+    if (lastRating && lastRating.level === "weak" && !confirm(t("weakConfirm"))) return;
+  }
+  btn.disabled = true;
+  show(st, "warn", t("creating"));
+  try {
+    const res = await api("/api/invite", { method: "POST", body: JSON.stringify({ password }) });
+    $("inviteCodeOut").value = res.code;
+    $("invitePwOut").textContent = res.password;
+    $("inviteResult").classList.remove("hidden");
+    show(st, "ok", t("inviteCreated"));
+  } catch (e) { show(st, "err", errText(e)); }
+  btn.disabled = false;
+});
+$("copyCode").addEventListener("click", async () => { if (await copy($("inviteCodeOut").value, $("inviteCodeOut"))) show($("inviteStatus"), "ok", t("copied")); });
+$("copyPw").addEventListener("click", async () => { if (await copy($("invitePwOut").textContent, $("invitePwOut"))) show($("inviteStatus"), "ok", t("copied")); });
 
 $("exportBtn").addEventListener("click", async () => {
   const st = $("exportStatus");
@@ -398,6 +611,7 @@ $("copyAgain").addEventListener("click", () => copy($("exportText").value));
 $("removeToken").addEventListener("click", async () => {
   if (!confirm(t("confirmRemove"))) return;
   await api("/api/token", { method: "DELETE" });
+  clearInvite();
   await load();
 });
 

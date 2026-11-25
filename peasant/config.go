@@ -11,6 +11,8 @@ type Config struct {
 	GuildID     string `json:"guildId"`
 	IncludeBots bool   `json:"includeBots"`
 	AppID       string `json:"appId"`
+	// FromInvite is true when the token came from an invite code of another officer.
+	FromInvite bool `json:"fromInvite"`
 }
 
 func configDir() (string, error) {

@@ -37,7 +37,8 @@ Member and role IDs are used only internally to put this together and are **not 
 | What | Where | How to delete |
 |---|---|---|
 | Bot token | Windows: encrypted with DPAPI in the config folder; macOS: keychain; Linux: file readable only by you in the config folder | "Remove token" in the app. If the token may have leaked, reset it in the Discord Developer Portal. |
-| Settings (selected server ID, bot option) | `config.json` in the config folder | Delete the config folder. |
+| Settings (selected server ID, bot option, whether the token came from an invite code) | `config.json` in the config folder | Delete the config folder. |
+| Invite codes for other officers | not stored by Peasant - code and password are only shown once; where they go is up to you | Reset the token in the Discord Developer Portal: every code given out stops working. |
 | Imported Discord list and decisions | WoW saved variables, per guild | Import tab → **Delete imported data** (current guild) or **Delete data of all guilds** / `/tgr wipe` (every guild on this WoW account, also guilds you have left). The Import tab shows for which guilds data is stored. To remove the settings too: with the game closed, delete `WTF/Account/<account>/SavedVariables/TheGuildRegistrar.lua`. |
 | Guild notes you entered (e.g. from a suggestion) | in the game, visible to the guild | Edit or delete them in the guild window. |
 
@@ -51,8 +52,9 @@ The Guild Registrar is a tool. Whoever uses it for a guild decides about purpose
 
 Recommendations:
 
-- **Inform your members**, e.g. in a rules or info channel: that Discord names and roles are compared with the guild roster, why (guild management) and who has access.
+- **Inform your members**, e.g. in a rules or info channel: that Discord names and roles are compared with the guild roster, why (guild management) and who has access (including the officers you gave an invite code).
 - **Only as much as needed:** prefer the *officer note* for Discord names. A public note is visible to all guild members.
+- **Share the bot with care:** an invite code gives another officer the same bot token (encrypted with a password; after redeeming it is stored protected on their PC like your own). Whoever has it can read the member list and do what `@everyone` may do on your server. Only give codes to officers who need them, send code and password by different ways, and reset the token when someone should no longer have access. The developer is not involved; the code never passes through any server of the project.
 - **Share exports with care:** the exported list contains assignments and twinks. Only post what the people concerned really need (e.g. just the names, without twinks).
 - **Delete when no longer needed**, e.g. when you are no longer an officer or leave the guild.
 - Follow the [Discord Developer Terms of Service](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service) and the [Discord Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy), which also apply to your own bot.
@@ -98,7 +100,8 @@ Mitglieds- und Rollen-IDs werden nur intern zum Zusammenstellen genutzt und **ni
 | Was | Wo | Löschen |
 |---|---|---|
 | Bot-Token | Windows: mit DPAPI verschlüsselt im Konfigurationsordner; macOS: Schlüsselbund; Linux: nur für dich lesbare Datei im Konfigurationsordner | Im Programm "Token entfernen". Falls das Token bekannt geworden sein könnte, im Discord Developer Portal zurücksetzen. |
-| Einstellungen (gewählte Server-ID, Bot-Option) | `config.json` im Konfigurationsordner | Konfigurationsordner löschen. |
+| Einstellungen (gewählte Server-ID, Bot-Option, ob das Token aus einem Einladungscode stammt) | `config.json` im Konfigurationsordner | Konfigurationsordner löschen. |
+| Einladungscodes für weitere Offiziere | von Peasant nicht gespeichert - Code und Passwort werden nur einmal angezeigt; wohin sie gehen, entscheidest du | Token im Discord Developer Portal zurücksetzen: Alle ausgegebenen Codes funktionieren dann nicht mehr. |
 | Importierte Discord-Liste und Entscheidungen | Gespeicherte Variablen von WoW, je Gilde | Tab Import → **Importierte Daten löschen** (aktuelle Gilde) oder **Daten aller Gilden löschen** / `/tgr wipe` (alle Gilden dieses WoW-Accounts, auch verlassene). Der Tab Import zeigt, für welche Gilden Daten gespeichert sind. Auch die Einstellungen entfernen: bei beendetem Spiel `WTF/Account/<Account>/SavedVariables/TheGuildRegistrar.lua` löschen. |
 | Von dir eingetragene Gildennotizen (z. B. aus einem Vorschlag) | im Spiel, für die Gilde sichtbar | Im Gildenfenster bearbeiten oder löschen. |
 
@@ -112,8 +115,9 @@ The Guild Registrar ist ein Werkzeug. Wer das Tool für eine Gilde einsetzt, ent
 
 Empfehlungen:
 
-- **Informiere deine Mitglieder**, z. B. im Regel- oder Info-Kanal: dass Discord-Namen und Rollen mit der Gildenliste abgeglichen werden, wozu (Gildenverwaltung) und wer Zugriff hat.
+- **Informiere deine Mitglieder**, z. B. im Regel- oder Info-Kanal: dass Discord-Namen und Rollen mit der Gildenliste abgeglichen werden, wozu (Gildenverwaltung) und wer Zugriff hat (auch die Offiziere, denen du einen Einladungscode gegeben hast).
 - **Nur so viel wie nötig:** Schreibe Discord-Namen bevorzugt in die *Offiziersnotiz*. Eine öffentliche Notiz ist für alle Gildenmitglieder sichtbar.
+- **Bot bedacht teilen:** Ein Einladungscode gibt einem anderen Offizier dasselbe Bot-Token (verschlüsselt mit einem Passwort; nach dem Einlösen wie dein eigenes geschützt auf seinem PC gespeichert). Wer es hat, kann die Mitgliederliste lesen und tun, was `@everyone` auf eurem Server darf. Gib Codes nur an Offiziere, die sie brauchen, gib Code und Passwort auf verschiedenen Wegen weiter und setze das Token zurück, wenn jemand keinen Zugriff mehr haben soll. Der Entwickler ist nicht beteiligt; der Code läuft über keinen Server des Projekts.
 - **Exporte bedacht teilen:** Die exportierte Liste enthält Zuordnungen und Twinks. Poste nur, was die Betroffenen wirklich brauchen (z. B. nur die Namen ohne Twinks).
 - **Löschen, wenn nicht mehr nötig**, etwa wenn du kein Offizier mehr bist oder die Gilde verlässt.
 - Halte dich an die [Discord Developer Terms of Service](https://discord.com/developers/docs/policies-and-agreements/developer-terms-of-service) und die [Discord Developer Policy](https://discord.com/developers/docs/policies-and-agreements/developer-policy), die auch für deinen eigenen Bot gelten.

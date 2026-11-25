@@ -28,7 +28,7 @@ It shows who belongs to whom, how certain each match is, who is missing on which
 
 A game addon cannot access the internet. So there are two parts:
 
-1. **Peasant** - the small helper app for Windows, macOS and Linux (download from the [releases page](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)). With **your own Discord bot** it reads the display names and role names of your server members and copies them to the clipboard. It runs locally in your browser; nothing is sent anywhere else.
+1. **Peasant** - the small helper app for Windows, macOS and Linux (download from the [releases page](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)). With **your own Discord bot** it reads the display names and role names of your server members and copies them to the clipboard. It runs locally in your browser; nothing is sent anywhere else. Other officers do not need their own bot: the guild master creates an **invite code** in Peasant (the bot token, encrypted with a password) and the officers simply redeem it.
 2. **The addon** - paste the text into the Import tab (`/tgr`) and the comparison starts.
 
 Setup takes about 10 minutes and is described step by step in the app, in the addon's Setup tab and in the **[setup guide](docs/setup-guide.md)**.
@@ -82,7 +82,7 @@ The Guild Registrar is an independent fan project and is not affiliated with, en
 - Filter, Sortierung, Tooltips mit Begründung, Rechtsklick-Aktionen inkl. Notiz-Vorschlag kopieren, Export.
 - Gildennotizen schreiben und Gildenränge ändern ist per Addon nicht möglich: WoW: Forever behält beides dem Blizzard-Interface vor. Die Menüpunkte sind ausgegraut; die Hinweise sagen, was im Gildenfenster zu ändern ist.
 
-Weil ein Addon nicht ins Internet kann, liest das kleine Hilfsprogramm **Peasant** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein.
+Weil ein Addon nicht ins Internet kann, liest das kleine Hilfsprogramm **Peasant** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein. Weitere Offiziere brauchen keinen eigenen Bot: Der Gildenmeister erzeugt in Peasant einen **Einladungscode** (das mit einem Passwort verschlüsselte Bot-Token), den die Offiziere einlösen.
 
 **Datenschutz:** Exportiert werden nur Anzeigenamen und Rollennamen, keine IDs. Der Export wird nicht in einer Datei gespeichert, alle Daten bleiben auf deinem PC, es gibt keinen Server und keine Telemetrie. Importierte Daten lassen sich jederzeit löschen - für die aktuelle Gilde oder für alle Gilden deines Accounts, auch verlassene (Tab Import oder `/tgr wipe`). **Du entscheidest, was mit den Daten deiner Mitglieder geschieht, und bist dafür verantwortlich** (z. B. nach der DSGVO) - bitte informiere deine Mitglieder über den Abgleich. Details: [docs/privacy.md](docs/privacy.md#deutsch).
 
