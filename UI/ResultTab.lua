@@ -140,10 +140,10 @@ local function playerText(row)
     if not p then
         return "|cff777777-|r"
     end
-    local s = charText(p.main)
+    local s = charText(p.main) .. string.format(" |cff888888%s|r", p.main.level or "")
     local n = #altChars(row)
     if n > 0 then
-        s = s .. string.format(" |cff999999(+%d)|r", n)
+        s = s .. string.format(" |cff33dd33(+%d)|r", n)
     end
     return s
 end
