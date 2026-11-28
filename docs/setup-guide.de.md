@@ -71,6 +71,7 @@ Welche Notizen gelesen werden, steht im Tab Abgleich über der Liste (*Zuordnung
 - **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
 - **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Bezeichnung „Twinks“ oder „Alts“, Twink-Muster, Notiz-Vorlagen und optionale Notiz-Prüfung, ignorierte Wörter, Schwellwerte.
 - Im Tab **Abgleich** zeigt die Spalte *Anpassen* (und der Tooltip), was zu ändern ist: Gildenrang, Twink-Kennzeichnung, Gildennotiz, Zuordnung, Discord-Name. Ein Klick auf **+** klappt die Twinks eines Spielers aus.
+- Die **Suche** im Tab Abgleich durchsucht alle Spalten (Discord-Name und -Rollen, Charakter, Realm, beide Notizen, Rang, Klasse, Stufe, Status, Hinweise). Bei mehreren Wörtern müssen alle vorkommen. Groß-/Kleinschreibung, Umlaute (`koerper` findet *Körper*), Akzente und Apostrophe spielen keine Rolle, Wortteile werden gefunden, und ab 4 Buchstaben wird ein Tippfehler toleriert (im Tab Einstellungen abschaltbar). Treffer, die andere Filter ausblenden, werden über der Liste gezählt und lassen sich per Klick anzeigen; der Tooltip zeigt, wo der Treffer liegt.
 - **Rechtsklick** auf einen Eintrag (oder einen Twink darunter) zeigt alle Aktionen. Was für den Eintrag nicht passt, ist ausgegraut; der Tooltip sagt, warum.
   - **Zuweisung bestätigen (fest)**: Die Zuweisung ändert sich nicht mehr automatisch.
   - **Bestätigung aufheben**: wieder automatische Zuordnung.

@@ -86,6 +86,9 @@ ns.DEFAULT_SETTINGS = {
         "kochen", "koch", "cooking", "angeln", "fishing", "ehs", "firstaid",
     },
 
+    -- search in the Comparison tab: words of 4+ letters are also found with one typo
+    searchTypos = true,
+
     -- classification thresholds
     thresholds = { sure = 0.90, likely = 0.70, unlikely = 0.45, margin = 0.15 },
 

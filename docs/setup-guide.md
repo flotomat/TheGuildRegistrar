@@ -71,6 +71,7 @@ Which notes are read is shown above the list in the Comparison tab (*Assignment 
 - **Ranks tab**: assign each Discord role to the guild rank it stands for, mark guest roles (e.g. *Guest*) and alt ranks.
 - **Options tab**: naming rule (e.g. `Nickname | Main`), which notes to use, whether alts are called "Alts" or "Twinks", alt patterns, note templates and the optional note check, ignored words, thresholds.
 - In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Click **+** to show the alts of a player.
+- The **search** in the Comparison tab covers all columns (Discord name and roles, character, realm, both notes, rank, class, level, status, hints). With several words, all of them must appear. Upper/lower case, umlauts (`koerper` finds *Körper*), accents and apostrophes do not matter, parts of words are found, and from 4 letters on one typo is tolerated (can be switched off in the Options tab). Hits hidden by other filters are counted above the list and can be shown with a click; the tooltip tells where the hit is.
 - **Right-click** an entry (or an alt below it) for all actions. Actions that do not fit the entry are greyed out; the tooltip says why.
   - **Confirm assignment (fix it)**: the assignment no longer changes automatically.
   - **Remove confirmation**: back to automatic assignment.

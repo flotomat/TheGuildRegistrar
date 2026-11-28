@@ -225,6 +225,77 @@ function Text.analyzeDiscordName(display, rule, stopset)
     return result
 end
 
+-- Search forms -------------------------------------------------------------------------
+-- The search is more forgiving than the matching: accent marks and apostrophes vanish
+-- ("Ka'thar" -> "kathar", "Dårk" -> "dark"), Latin Extended-A letters are folded as well
+-- ("Łukasz" -> "lukasz"), everything else that is not a letter or digit separates words.
+
+-- Latin Extended-A (U+0100..U+017F) -> ASCII, by code point
+local EXT_A = {}
+local function extRange(from, to, rep)
+    for cp = from, to do
+        EXT_A[cp] = rep
+    end
+end
+extRange(0x100, 0x105, "a")
+extRange(0x106, 0x10D, "c")
+extRange(0x10E, 0x111, "d")
+extRange(0x112, 0x11B, "e")
+extRange(0x11C, 0x123, "g")
+extRange(0x124, 0x127, "h")
+extRange(0x128, 0x131, "i")
+extRange(0x132, 0x133, "ij")
+extRange(0x134, 0x135, "j")
+extRange(0x136, 0x138, "k")
+extRange(0x139, 0x142, "l")
+extRange(0x143, 0x14B, "n")
+extRange(0x14C, 0x151, "o")
+extRange(0x152, 0x153, "oe")
+extRange(0x154, 0x159, "r")
+extRange(0x15A, 0x161, "s")
+extRange(0x162, 0x167, "t")
+extRange(0x168, 0x173, "u")
+extRange(0x174, 0x175, "w")
+extRange(0x176, 0x178, "y")
+extRange(0x179, 0x17E, "z")
+extRange(0x17F, 0x17F, "s")
+
+local function foldExtA(b1, b2)
+    return EXT_A[(byte(b1) - 192) * 64 + (byte(b2) - 128)]
+end
+
+-- Remove accent marks and apostrophes (they must not split a word).
+local function stripMarks(s)
+    s = gsub(s, "\204[\128-\191]", "")                  -- combining marks U+0300..U+033F
+    s = gsub(s, "\205[\128-\175]", "")                  -- combining marks U+0340..U+036F
+    s = gsub(s, "\194[\168\180\184]", "")               -- ¨ ´ ¸
+    s = gsub(s, "\202[\185-\191]", "")                  -- modifier letters incl. ʼ (U+02B9..U+02BF)
+    s = gsub(s, "\203[\128-\159]", "")                  -- ˆ ˇ ˘ ˙ ˚ ˛ ˜ ˝ (U+02C0..U+02DF)
+    s = gsub(s, "\226\128[\152-\155\178-\180]", "")     -- ‘ ’ ‚ ‛ ′ ″ ‴
+    s = gsub(s, "['`%^]", "")
+    return s
+end
+
+local function searchFold(s, map)
+    s = fold(s, map)
+    s = gsub(s, "([\196\197])([\128-\191])", foldExtA)
+    s = stripSymbols(s)
+    s = gsub(s, "[^%w\128-\255]+", " ")
+    return (gsub(gsub(s, "^ +", ""), " +$", ""))
+end
+
+-- Text prepared for the search. Returns {
+--   a  = words folded the simple way (ä -> a), separated by single spaces,
+--   g  = words folded the German way (ä -> ae),
+--   ca, cg = the same without spaces (finds "Wurst Inator" when searching "wurstinator"),
+-- }. Both variants always have the same number of words.
+function Text.searchForms(raw)
+    local l = stripMarks(lowerUtf8(tostring(raw or "")))
+    local a = searchFold(l, FOLD_SIMPLE)
+    local g = searchFold(l, FOLD_GERMAN)
+    return { a = a, g = g, ca = gsub(a, " ", ""), cg = gsub(g, " ", "") }
+end
+
 -- The "nickname" part of a Discord name for note templates.
 function Text.nickname(analysis)
     if analysis.rule and analysis.rule.ok and analysis.rule.nickRaw then

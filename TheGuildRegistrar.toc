@@ -24,6 +24,7 @@ Locales\Apply.lua
 Core\Util.lua
 Matching\Text.lua
 Matching\Similarity.lua
+Matching\Search.lua
 Data\Import.lua
 Data\Share.lua
 Matching\Players.lua

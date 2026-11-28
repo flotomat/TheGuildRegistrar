@@ -30,7 +30,7 @@ Which notes are read is shown above the list and can be switched there (public n
 - **Optional naming rule**, e.g. `Nickname | Main`. Names breaking the rule or with swapped parts get a hint.
 - **Rank check**: map Discord roles to guild ranks; the highest Discord role counts. Mismatches are shown and can be filtered.
 - **Guest roles** (e.g. "Guest") are listed but hidden by default.
-- **Filters & sorting**: by status, side (only in Discord / only in guild), rank mismatch, hints, online, free text search.
+- **Filters & sorting**: by status, side (only in Discord / only in guild), rank mismatch, hints, online, and a **fuzzy search** over all columns (several words, umlauts/accents/apostrophes ignored, parts of words, one typo tolerated).
 - **Officer actions** (right-click): confirm (fix), remove the confirmation, **separate** a character from a Discord account (fixed ones only after a confirmation), assign another candidate, add a character or a Discord member by name, assign as alt of / mark as main, ignore, whisper, copy names, **copy a note suggestion** to paste into the guild window. The menu always shows every action; actions that do not fit an entry are greyed out and say why.
 - **Share assignments** with other officers as a code (Comparison tab), taken over in the Import tab.
 - **Writing guild notes and changing guild ranks** from the addon is not possible: WoW: Forever reserves both for the Blizzard UI. The menu entries are shown greyed out; the hints tell you what to change in the guild window.

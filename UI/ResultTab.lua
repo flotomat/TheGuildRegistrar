@@ -243,27 +243,113 @@ end
 
 -- Filtering and sorting --------------------------------------------------------------
 
-local function charMatches(c, needle)
-    local text = ns.Text.lower(table.concat({ c.name, c.note or "", c.officerNote or "" }, " "))
-    return text:find(needle, 1, true) ~= nil
+-- Search (fuzzy, over all columns; see Matching/Search.lua) ----------------------------
+
+-- Searchable fields per row, built on first use. Rows are new tables after every comparison
+-- run, so the cache never holds outdated texts.
+local searchIndex = setmetatable({}, { __mode = "k" })
+-- current query: words, typo tolerance and a generation counter for the per-row result cache
+local search = { query = nil, words = {}, typos = true, gen = 0 }
+-- show search hits even if other filters hide them (switched by the hint next to the notes row)
+local showAllHits = false
+
+local FIELD_LABELS = {
+    status = "COL_STATUS", discord = "SEARCH_FIELD_DISCORD", roles = "SEARCH_FIELD_ROLES",
+    char = "COL_CHARACTER", realm = "SEARCH_FIELD_REALM", note = "SEARCH_FIELD_NOTE",
+    officerNote = "SEARCH_FIELD_OFFICER_NOTE", rank = "COL_RANK", class = "SEARCH_FIELD_CLASS",
+    level = "SEARCH_FIELD_LEVEL", hints = "COL_HINTS",
+}
+
+local function rowFields(row)
+    local idx = searchIndex[row]
+    if idx then
+        return idx
+    end
+    local fields = {}
+    local function add(key, text, owner)
+        local fld = ns.Search.field(key, text, owner)
+        if fld then
+            fields[#fields + 1] = fld
+        end
+    end
+    add("status", L["STATUS_" .. row.status:upper()])
+    add("status", sideText(row))
+    if row.member then
+        add("discord", row.member.display)
+        add("roles", table.concat(row.member.roles, " "))
+    end
+    local main = row.player and row.player.main
+    for _, c in ipairs(ns.Advice.rowChars(row)) do
+        local owner = (c ~= main) and c or nil
+        add("char", c.name, owner)
+        add("realm", c.realm, owner)
+        add("note", c.note, owner)
+        add("officerNote", c.officerNote, owner)
+        add("rank", c.rankName, owner)
+        add("class", c.className, owner)
+        add("level", c.level and tostring(c.level), owner)
+    end
+    for _, item in ipairs(rowAdvice(row)) do
+        local owner = (item.char and item.char ~= main) and item.char or nil
+        add("hints", tostring(adviceShort(item.e) or "") .. " " .. adviceText(item.e), owner)
+    end
+    idx = { fields = fields }
+    searchIndex[row] = idx
+    return idx
 end
 
-local function matchesSearch(row, needle)
-    if needle == "" then
+local function setQuery(text)
+    local q = ns.Util.trim(text or "")
+    local typos = settings().searchTypos ~= false
+    if q ~= search.query or typos ~= search.typos then
+        search.query, search.typos = q, typos
+        search.words = (q ~= "") and ns.Search.parse(q) or {}
+        search.gen = search.gen + 1
+    end
+    return #search.words > 0
+end
+
+local function isSearching()
+    return #search.words > 0
+end
+
+local function matchesSearch(row)
+    if not isSearching() then
         return true
     end
-    if row.member then
-        local text = ns.Text.lower(row.member.display .. " " .. table.concat(row.member.roles, " "))
-        if text:find(needle, 1, true) then
-            return true
+    local idx = rowFields(row)
+    if idx.gen ~= search.gen then
+        idx.gen = search.gen
+        idx.ok = ns.Search.match(idx.fields, search.words, search.typos) and true or false
+    end
+    return idx.ok
+end
+
+-- Fields of a row that contain one of the search words.
+local function searchHits(row)
+    if not isSearching() then
+        return {}
+    end
+    local _, hits = ns.Search.match(rowFields(row).fields, search.words, search.typos, true)
+    return hits or {}
+end
+
+-- "Found in" text for the tooltip; `char` limits it to the fields of one alt.
+local function foundInText(row, char)
+    local seen, parts = {}, {}
+    for _, fld in ipairs(searchHits(row)) do
+        if char == nil or fld.owner == char then
+            local label = L[FIELD_LABELS[fld.key] or "COL_STATUS"]
+            if fld.owner and char == nil then
+                label = label .. " (" .. fld.owner.name .. ")"
+            end
+            if not seen[label] then
+                seen[label] = true
+                parts[#parts + 1] = label
+            end
         end
     end
-    for _, c in ipairs(ns.Advice.rowChars(row)) do
-        if charMatches(c, needle) then
-            return true
-        end
-    end
-    return false
+    return table.concat(parts, ", ")
 end
 
 local function isOnline(row)
@@ -300,10 +386,15 @@ local function filteredRows()
         return {}
     end
     local f = filters()
-    local needle = ns.Text.lower(ns.Util.trim(f.search or ""))
+    local searching = setQuery(f.search)
+    if not searching then
+        showAllHits = false
+    end
     local out = {}
+    local hidden = 0 -- search hits hidden by the other filters
     for _, row in ipairs(res.rows) do
-        local ok = f.status[row.status]
+        local hit = matchesSearch(row)
+        local ok = hit and f.status[row.status]
         if ok and f.side ~= "all" and row.side ~= f.side then
             ok = false
         end
@@ -316,8 +407,12 @@ local function filteredRows()
         if ok and f.onlineOnly and not isOnline(row) then
             ok = false
         end
-        if ok and not matchesSearch(row, needle) then
-            ok = false
+        if searching and hit and not ok then
+            if showAllHits then
+                ok = true
+            else
+                hidden = hidden + 1
+            end
         end
         if ok then
             out[#out + 1] = row
@@ -349,10 +444,11 @@ local function filteredRows()
         local alts = altChars(row)
         if #alts > 0 then
             local open = isOpen(row)
-            if not open and needle ~= "" then
-                for _, c in ipairs(alts) do
-                    if charMatches(c, needle) then
+            if not open and searching then
+                for _, fld in ipairs(searchHits(row)) do
+                    if fld.owner then
                         open = true
+                        break
                     end
                 end
             end
@@ -363,7 +459,7 @@ local function filteredRows()
             end
         end
     end
-    return items, out
+    return items, out, hidden
 end
 
 -- Tooltip ----------------------------------------------------------------------------
@@ -415,6 +511,10 @@ local function showRowTooltip(owner, row)
     local side = sideText(row)
     if side then
         GameTooltip:AddLine(side, 1, 0.6, 0.6)
+    end
+    local found = isSearching() and foundInText(row) or ""
+    if found ~= "" then
+        GameTooltip:AddLine(L.TOOLTIP_FOUND_IN .. " " .. found, 0.4, 1, 0.4, true)
     end
     if row.member then
         GameTooltip:AddLine(" ")
@@ -476,6 +576,10 @@ local function showChildTooltip(owner, item)
     local row, c = item.row, item.char
     GameTooltip:SetOwner(owner, "ANCHOR_CURSOR_RIGHT")
     addCharLines(c, L.TOOLTIP_TWINK)
+    local found = isSearching() and foundInText(row, c) or ""
+    if found ~= "" then
+        GameTooltip:AddLine(L.TOOLTIP_FOUND_IN .. " " .. found, 0.4, 1, 0.4, true)
+    end
     local ex = extraOf(row, c)
     if ex then
         GameTooltip:AddLine(statusText(ex.status) .. (ex.status ~= "confirmed" and ex.score
@@ -1040,12 +1144,29 @@ local function create(parent)
 
     local searchLabel = W.Label(f, L.FILTER_SEARCH, "GameFontNormal")
     searchLabel:SetPoint("LEFT", onlineCb.label, "RIGHT", 24, 0)
-    local search = W.EditBox(f, 170, 20)
-    search:SetPoint("LEFT", searchLabel, "RIGHT", 10, 0)
-    search:SetText(fl.search or "")
-    search:SetScript("OnTextChanged", function(self)
-        fl.search = self:GetText()
-        f.Update()
+    local searchBox = W.SearchBox(f, 200, 20, L.SEARCH_PLACEHOLDER)
+    searchBox:SetPoint("LEFT", searchLabel, "RIGHT", 10, 0)
+    searchBox:SetText(fl.search or "")
+    W.Tooltip(searchBox, L.FILTER_SEARCH, W.LocText("SEARCH_TOOLTIP"))
+    -- update the list shortly after the last key press (the search runs over all columns)
+    local searchToken = 0
+    searchBox:HookScript("OnTextChanged", function(self)
+        local text = self:GetText()
+        if text == fl.search then
+            return
+        end
+        fl.search = text
+        searchToken = searchToken + 1
+        local token = searchToken
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0.25, function()
+                if token == searchToken and f:IsShown() then
+                    f.Update()
+                end
+            end)
+        else
+            f.Update()
+        end
     end)
 
     -- which notes are used for the assignment (same setting as in the Options tab)
@@ -1075,9 +1196,25 @@ local function create(parent)
     end)
     notesCycle:SetPoint("LEFT", notesLabel, "RIGHT", 10, 0)
     W.Tooltip(notesCycle, L.NOTES_SOURCE_LABEL, W.LocText("NOTES_SOURCE_TOOLTIP"))
+    -- search hits hidden by other filters: click shows them anyway (and back)
+    local hiddenBtn = CreateFrame("Button", nil, f)
+    hiddenBtn:SetHeight(18)
+    hiddenBtn:SetPoint("TOPRIGHT", -8, -66)
+    local hiddenText = hiddenBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    hiddenText:SetPoint("RIGHT", 0, 0)
+    hiddenText:SetJustifyH("RIGHT")
+    local hiddenHl = hiddenBtn:CreateTexture(nil, "HIGHLIGHT")
+    hiddenHl:SetAllPoints()
+    hiddenHl:SetColorTexture(1, 1, 1, 0.08)
+    hiddenBtn:SetScript("OnClick", function()
+        showAllHits = not showAllHits
+        f.Update()
+    end)
+    hiddenBtn:Hide()
+
     local notesWarn = W.Label(f, "", "GameFontHighlightSmall")
     notesWarn:SetPoint("LEFT", notesCycle, "RIGHT", 12, 0)
-    notesWarn:SetPoint("RIGHT", -8, 0)
+    notesWarn:SetPoint("RIGHT", hiddenBtn, "LEFT", -12, 0)
 
     -- header
     local header = CreateFrame("Frame", nil, f)
@@ -1187,7 +1324,9 @@ local function create(parent)
         rankCb:SetChecked(false)
         hintCb:SetChecked(false)
         onlineCb:SetChecked(false)
-        search:SetText("")
+        showAllHits = false
+        searchBox:SetText("")
+        searchBox:ClearFocus()
         f.Update()
     end)
     reset:SetPoint("BOTTOMRIGHT", -2, 4)
@@ -1213,10 +1352,30 @@ local function create(parent)
         else
             notesWarn:SetText("")
         end
-        local items, rows = filteredRows()
+        local items, rows, hidden = filteredRows()
         f.rows = items
         f.parentRows = rows or {}
         list:SetItems(items)
+
+        -- search: mark the field as an active filter, offer hits hidden by other filters
+        if isSearching() then
+            searchLabel:SetTextColor(0.3, 1, 0.3)
+        else
+            searchLabel:SetTextColor(1, 0.82, 0)
+        end
+        local hint
+        if isSearching() and showAllHits then
+            hint = "|cff66ccff" .. L.SEARCH_SHOW_FILTERED .. "|r"
+        elseif isSearching() and (hidden or 0) > 0 then
+            hint = "|cffffaa00" .. string.format(L.SEARCH_HIDDEN, hidden) .. "|r"
+        end
+        if hint then
+            hiddenText:SetText(hint)
+            hiddenBtn:SetWidth(hiddenText:GetStringWidth() + 4)
+            hiddenBtn:Show()
+        else
+            hiddenBtn:Hide()
+        end
         if state.running then
             f.empty:SetText(L.STATUS_RUNNING)
         elseif state.error then

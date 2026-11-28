@@ -133,6 +133,29 @@ function W.EditBox(parent, width, height)
     return eb
 end
 
+-- Search field: Blizzard's SearchBoxTemplate (magnifier, grey placeholder, clear button) if the
+-- client has it, otherwise a plain field with an "x" button. Use HookScript for OnTextChanged.
+function W.SearchBox(parent, width, height, placeholder)
+    local hasTemplate = C_XMLUtil and C_XMLUtil.GetTemplateInfo and C_XMLUtil.GetTemplateInfo("SearchBoxTemplate")
+    if hasTemplate then
+        local eb = CreateFrame("EditBox", nil, parent, "SearchBoxTemplate")
+        eb:SetSize(width or 150, height or 20)
+        eb:SetAutoFocus(false)
+        if placeholder and eb.Instructions then
+            eb.Instructions:SetText(placeholder)
+        end
+        return eb
+    end
+    local eb = W.EditBox(parent, (width or 150) - 24, height)
+    local clear = W.Button(parent, "x", 22, height or 20, function()
+        eb:SetText("")
+        eb:ClearFocus()
+    end)
+    clear:SetPoint("LEFT", eb, "RIGHT", 2, 0)
+    eb.clearButton = clear
+    return eb
+end
+
 -- Read-only field to copy a text (links etc.). Selects everything on focus.
 function W.CopyBox(parent, width, text)
     local eb = W.EditBox(parent, width, 20)

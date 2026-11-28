@@ -270,6 +270,12 @@ local function create(parent)
     end)
     apply:SetPoint("TOPLEFT", sBox, "BOTTOMLEFT", 0, -8)
 
+    -- search in the Comparison tab
+    controls.searchTypos = W.Check(f, L.OPT_SEARCH_TYPOS, function(_, v)
+        settings().searchTypos = v
+    end, L.OPT_SEARCH_TYPOS_TOOLTIP)
+    controls.searchTypos:SetPoint("TOPLEFT", apply, "BOTTOMLEFT", 0, -12)
+
     -- bottom buttons --------------------------------------------------------------------
     local resetSettings = W.Button(f, L.OPT_RESET_SETTINGS, 210, 24, function()
         ns.Dialogs.ShowConfirm(L.OPT_RESET_SETTINGS, L.OPT_RESET_SETTINGS_CONFIRM, function()
@@ -305,6 +311,7 @@ local function create(parent)
         controls.order.Refresh()
         controls.twinkByRank:SetChecked(s.twinkByRank)
         controls.twinkByNote:SetChecked(s.twinkByNote)
+        controls.searchTypos:SetChecked(s.searchTypos ~= false)
         for key, eb in pairs(controls.thresholds) do
             eb:SetText(tostring(math.floor((s.thresholds[key] or 0) * 100 + 0.5)))
         end

@@ -59,6 +59,23 @@ Normalisierung (Umlaute doppelt: ä→a und ä→ae, Emojis/Symbole weg, CamelCa
 4. Echte Discord-Daten des eigenen Servers; danach ggf. Gewichte/Schwellwerte nachjustieren.
 5. CurseForge-Projekt anlegen, `## X-Curse-Project-ID` in die TOC eintragen, API-Token als GitHub-Secret `CF_API_KEY` hinterlegen.
 
+## Erweiterungen (Plan vom 2026-11-28)
+
+Vier Releases nacheinander, jeweils mit Tests außerhalb des Spiels und Testhinweisen fürs Spiel.
+
+1. **Unscharfe Suche** *(umgesetzt)*: durchsucht alle Spalten (Discord-Name/-Rollen, Charakter, Realm, beide Notizen, Rang, Klasse, Stufe, Status, Hinweise). Alle Wörter müssen vorkommen; Umlaute (a/ae), Akzente, Apostrophe und Latin-Extended-A werden vereinheitlicht; Treffer auch mitten im Wort; ab 4 Buchstaben ein Tippfehler (Ersetzen, Einfügen, Löschen, Vertauschen) ab Wortanfang, abschaltbar. Treffer, die andere Filter ausblenden, werden gezählt und lassen sich anzeigen; Tooltip „Gefunden in“. Code: `Matching/Search.lua`, `Text.searchForms`.
+2. **Löschschutz**: Warnfenster (nur Abbrechen/Löschen) mit Aufzählung, sobald eine Aktion manuelle Entscheidungen löscht (feste/gelöste Zuweisungen, Twink/Main, Ignorierte, manuelle Dungeonrollen, vorgemerkte Notizen, geänderte Einstellungen) – auch bei „Zurücksetzen“ und „Twink-Zuordnung zurücksetzen“, die bisher ohne Rückfrage waren.
+3. **Dungeonrollen** (Tank, Heiler, Nahkampf, Fernkampf; je Charakter bis zu zwei; eigene Symbole: Schild, grünes Plus, gekreuzte Schwerter, Pfeil & Bogen). Quellen manuell > Discord > Offiziersnotiz > öffentliche Notiz, Reihenfolge und An/Aus einstellbar. Discord nur bei genau einem Charakter, sonst Hinweis. Klassen: Krieger T/N, Schurke N, Paladin T/H/N, Priester H/F, Magier F, Hexenmeister F, Jäger N/F, Druide T/H/N/F, Schamane H/N/F. „DD“ wird über die Klasse aufgelöst, wenn sie nur eine DD-Art hat, sonst Hinweis; Spezialisierungen werden nicht ausgewertet. Widersprüche als Hinweis. Eigener Speicher (DB v3), Freigabecode-Zeile `DR`. Tab Einstellungen bekommt Unterreiter: Allgemein · Ränge · Dungeonrollen · Notizen. Im UI immer „Dungeonrolle“ bzw. „Discord-Rolle“.
+4. **Notizen vorbereiten**: je Charakterzeile drei Icon-Knöpfe (öffentlich manuell, Offizier manuell, automatisch aus den Zuweisungen und Vorlagen für die im Abgleich genutzten Notizen). Begleitfenster am Blizzard-Gildenfenster (Mitglieder-Reiter) mit den vorgemerkten Notizen des ausgewählten Charakters. Beim Öffnen einer Blizzard-Notiz erscheint ein Kopierfeld mit markiertem Text: Strg+C → in Blizzards Feld klicken → Strg+A → Strg+V → Enter. Danach automatisch abhaken (Ton + Hinweis).
+
+Erkenntnisse aus Tests im Spiel (2026-11-28):
+
+- `GuildRosterSetPublicNote`/`GuildRosterSetOfficerNote` gibt es in Forever nicht; `C_GuildInfo.SetNote` ist für Addons gesperrt.
+- `CopyToClipboard` existiert, tut aber nichts.
+- Das Befüllen von Blizzards Notizfeld durch ein Addon (`SetText`) führt beim Speichern zu „der Blizzard-UI vorbehalten“ → Blizzard-Fenster nur lesen.
+- Unbedenklich: `hooksecurefunc(CommunitiesFrame.GuildMemberDetailFrame, "DisplayMember", …)` und reines Abfragen von `StaticPopup1`. Der Notizdialog heißt `SET_GUILD_COMMUNITIY_NOTE` (Schreibfehler von Blizzard), `data = { currentNote, isPublic, guid }`.
+- Im Notizfeld markiert Strg+A bzw. Umschalt+Pos1 den alten Text.
+
 ## Ideen für später
 
 - Mehrere Discord-Server pro Gilde, Verlauf/Änderungen zwischen zwei Importen.
