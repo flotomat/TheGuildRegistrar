@@ -77,6 +77,7 @@ Which notes are read is shown above the list in the Comparison tab (*Assignment 
   - **Remove confirmation**: back to automatic assignment.
   - **Separate from this Discord member**: the character (with its alts, if it is a main) is no longer assigned to this Discord account. For a confirmed assignment a window asks first. Undo with *Reset manual decisions*.
   - **Add character by name** / **Assign to Discord member by name**, **Assign other candidate**, **Assign as alt of** / **Mark as main**, ignore, whisper, copy a note suggestion.
+- **Delete protection**: before an action removes or overwrites manual work, a warning lists what would be lost (e.g. *Fixed assignments: 3*, *Ignored characters: 1*, *changed settings*), with only two buttons: Cancel and e.g. Delete. This covers deleting imported data, resets (Discord member, alt/main, settings), removing a confirmation, separating, replacing a fixed assignment by another Discord member and taking over a shared code that overwrites your own decisions.
 - **Share assignments** (Comparison tab) creates a code with your manual decisions. Give it to other officers, e.g. as a text file in Discord; they paste it into their **Import** tab and confirm. Shared entries replace their own decisions for the same characters. The code contains Discord names and assignments - only share it with people who may see them.
 - Writing guild notes and changing guild ranks is reserved for the Blizzard UI in WoW: Forever, so do this in the guild window. The addon shows these menu entries greyed out.
 

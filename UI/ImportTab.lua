@@ -70,14 +70,17 @@ local function create(parent)
                 if parsed.guild and parsed.guild ~= "" and parsed.guild ~= guild then
                     msg = msg .. "\n\n" .. string.format(L.SHARE_GUILD_OTHER, parsed.guild, guild)
                 end
-                ns.Dialogs.ShowConfirm(L.SHARE_IMPORT_TITLE, msg, function()
+                -- own decisions the code would overwrite or remove -> delete warning
+                local g = ns.DB.Guild()
+                local lost = ns.Protect.Share(g and g.decisions, parsed)
+                ns.Dialogs.ShowDeleteWarning(L.SHARE_IMPORT_TITLE, msg, lost, function()
                     local n = ns.Engine.ImportDecisions(parsed)
                     local done = string.format(L.SHARE_IMPORTED, n)
                     f.result:SetText("|cff44ff44" .. done .. "|r")
                     ns.Engine.Print(done)
                     eb:SetText("")
                     eb:ClearFocus()
-                end)
+                end, L.PROTECT_OVERWRITE)
             end
             return
         end
@@ -119,7 +122,7 @@ local function create(parent)
 
     -- delete Discord data (import + decisions): current guild / all guilds, always with confirmation
     local deleteBtn = W.Button(side, L.IMPORT_DELETE, 260, 24, function()
-        ns.Dialogs.ShowConfirm(L.IMPORT_DELETE, L.IMPORT_DELETE_CONFIRM, function()
+        ns.Dialogs.ShowDeleteWarning(L.IMPORT_DELETE, L.IMPORT_DELETE_CONFIRM, ns.Protect.GuildData(ns.DB.Guild()), function()
             if ns.Engine.DeleteImportedData() then
                 f.result:SetText("|cff44ff44" .. L.IMPORT_DELETED .. "|r")
                 ns.Engine.Print(L.IMPORT_DELETED)
@@ -173,7 +176,11 @@ function ns.UI.ConfirmDeleteAllData(onDone)
         return
     end
     local text = string.format(L.IMPORT_DELETE_ALL_CONFIRM, #keys, guildList(keys, 15))
-    ns.Dialogs.ShowConfirm(L.IMPORT_DELETE_ALL, text, function()
+    local lost = {}
+    for _, key in ipairs(keys) do
+        ns.Protect.Merge(lost, ns.Protect.GuildData(ns.db.guilds[key]))
+    end
+    ns.Dialogs.ShowDeleteWarning(L.IMPORT_DELETE_ALL, text, lost, function()
         local n = ns.Engine.DeleteAllImportedData()
         ns.Engine.Print(string.format(L.IMPORT_DELETED_ALL, n))
         if onDone then

@@ -667,6 +667,11 @@ local function rowMains(row)
 end
 
 -- True if character `c` is held in this row by a fixed assignment (its own or that of its group main).
+local function currentDecisions()
+    local g = ns.DB.Guild()
+    return g and g.decisions
+end
+
 local function isFixed(row, c)
     local m = row.member
     if not m or not c then
@@ -691,10 +696,49 @@ local function unlink(row, c)
         ns.Engine.Print(string.format(L.UNLINKED, c.name, m.display))
     end
     if isFixed(row, c) then
-        ns.Dialogs.ShowConfirm(L.UNLINK_TITLE, string.format(L.UNLINK_CONFIRM, c.name, m.display, m.display), doIt)
+        -- the fixed assignment may also come from the group main: it is lost either way
+        local counts = ns.Protect.Links(currentDecisions(), m.key, c.fullName)
+        if not counts.links then
+            counts.links = 1
+        end
+        ns.Dialogs.ShowDeleteWarning(L.UNLINK_TITLE, string.format(L.UNLINK_CONFIRM, c.name, m.display, m.display),
+            counts, doIt, L.PROTECT_UNLINK)
     else
         doIt()
     end
+end
+
+-- Display name of a Discord member of the last run.
+local function memberDisplay(memberKey)
+    for _, m in ipairs(ns.state.results and ns.state.results.members or {}) do
+        if m.key == memberKey then
+            return m.display
+        end
+    end
+    return memberKey
+end
+
+-- Fix characters to a Discord member; asks first if one of them is fixed to another member.
+local function confirmTo(memberKey, chars)
+    local list = type(chars) == "table" and chars or { chars }
+    local d = currentDecisions()
+    local counts = ns.Protect.OtherLinks(d, memberKey, list)
+    if not counts.links then
+        ns.Engine.Confirm(memberKey, list)
+        return
+    end
+    local names = {}
+    for _, name in ipairs(list) do
+        if d.links[name] and d.links[name] ~= memberKey then
+            local ch = ns.Engine.FindChar(name)
+            names[#names + 1] = string.format("%s (%s)", ch and ch.name or name, memberDisplay(d.links[name]))
+        end
+    end
+    ns.Dialogs.ShowDeleteWarning(L.OVERWRITE_LINK_TITLE,
+        string.format(L.OVERWRITE_LINK_CONFIRM, table.concat(names, ", "), memberDisplay(memberKey)), counts,
+        function()
+            ns.Engine.Confirm(memberKey, list)
+        end, L.PROTECT_OVERWRITE)
 end
 
 -- Assignment section. `c` is the character the menu was opened for (main of the row or an alt).
@@ -722,7 +766,7 @@ local function addAssignActions(items, row, c, isChild)
     end
 
     items[#items + 1] = entry(L.MENU_CONFIRM, function()
-        E.Confirm(m.key, targets)
+        confirmTo(m.key, targets)
     end, naPair or (allFixed and L.NA_CONFIRMED) or nil)
 
     items[#items + 1] = entry(L.MENU_UNCONFIRM, function()
@@ -733,9 +777,10 @@ local function addAssignActions(items, row, c, isChild)
                 names[#names + 1] = ch and ch.name or name
             end
         end
-        ns.Dialogs.ShowConfirm(L.UNCONFIRM_TITLE, string.format(L.UNCONFIRM_CONFIRM, table.concat(names, ", "), m.display), function()
-            E.Unconfirm(m.key, targets)
-        end)
+        ns.Dialogs.ShowDeleteWarning(L.UNCONFIRM_TITLE, string.format(L.UNCONFIRM_CONFIRM, table.concat(names, ", "), m.display),
+            ns.Protect.Links(currentDecisions(), m.key, targets), function()
+                E.Unconfirm(m.key, targets)
+            end, L.PROTECT_UNCONFIRM)
     end, naPair or ((not anyFixed) and L.NA_NOT_CONFIRMED) or nil)
 
     items[#items + 1] = entry(L.MENU_UNLINK, function()
@@ -749,11 +794,11 @@ local function addAssignActions(items, row, c, isChild)
             for _, alt in ipairs(row.alternatives) do
                 if m and alt.player then
                     sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.player.main.name, alt.score * 100), func = function()
-                        E.Confirm(m.key, alt.player.main.fullName)
+                        confirmTo(m.key, alt.player.main.fullName)
                     end }
                 elseif p and alt.member then
                     sub[#sub + 1] = { text = string.format("%s (%d%%)", alt.member.display, alt.score * 100), func = function()
-                        E.Confirm(alt.member.key, p.main.fullName)
+                        confirmTo(alt.member.key, p.main.fullName)
                     end }
                 end
             end
@@ -761,7 +806,7 @@ local function addAssignActions(items, row, c, isChild)
             for _, pc in ipairs(c.player.candidates or {}) do
                 if pc.member ~= m and #sub < 7 then
                     sub[#sub + 1] = { text = string.format("%s (%d%%)", pc.member.display, pc.score * 100), func = function()
-                        E.Confirm(pc.member.key, c.fullName)
+                        confirmTo(pc.member.key, c.fullName)
                     end }
                 end
             end
@@ -774,7 +819,7 @@ local function addAssignActions(items, row, c, isChild)
         ns.Dialogs.ShowInput(L.MENU_ASSIGN_BY_NAME, string.format(L.ASSIGN_BY_NAME_LABEL, m.display), "", function(name)
             local ch = findCharByName(name)
             if ch then
-                E.Confirm(m.key, ch.fullName)
+                confirmTo(m.key, ch.fullName)
             else
                 E.Print(string.format(L.ASSIGN_NOT_FOUND, name))
             end
@@ -785,7 +830,7 @@ local function addAssignActions(items, row, c, isChild)
         ns.Dialogs.ShowInput(L.MENU_ASSIGN_MEMBER, string.format(L.ASSIGN_MEMBER_LABEL, c.name), "", function(name)
             local member = E.FindMember(name)
             if member then
-                E.Confirm(member.key, c.fullName)
+                confirmTo(member.key, c.fullName)
             else
                 E.Print(string.format(L.MEMBER_NOT_FOUND, name))
             end
@@ -793,7 +838,10 @@ local function addAssignActions(items, row, c, isChild)
     end, (not c and L.NA_NO_CHAR) or (ignored and L.NA_IGNORED) or nil)
 
     items[#items + 1] = entry(L.MENU_RESET, function()
-        E.ResetMember(m.key)
+        ns.Dialogs.ShowDeleteWarning(L.RESET_MEMBER_TITLE, string.format(L.RESET_MEMBER_CONFIRM, m.display),
+            ns.Protect.Member(currentDecisions(), m.key), function()
+                E.ResetMember(m.key)
+            end, L.PROTECT_RESET)
     end, (not m and L.NA_NO_DISCORD) or ((not E.HasDecision(m.key)) and L.NA_NO_DECISIONS) or nil)
 end
 
@@ -837,7 +885,10 @@ local function addCharActions(items, row, c)
     end, na or ((isRowMain and not c.isTwink) and L.NA_ALREADY_MAIN) or nil)
 
     items[#items + 1] = entry(L.MENU_RESET_ALT, function()
-        E.ResetAltDecision(c.fullName)
+        ns.Dialogs.ShowDeleteWarning(L.RESET_ALT_TITLE, string.format(L.RESET_ALT_CONFIRM, c.name),
+            ns.Protect.AltDecision(currentDecisions(), c.fullName), function()
+                E.ResetAltDecision(c.fullName)
+            end, L.PROTECT_RESET)
     end, na or ((not E.HasAltDecision(c.fullName)) and L.NA_NO_ALT_DECISION) or nil)
 
     -- guild rank (blocked by Blizzard in WoW: Forever -> greyed out)

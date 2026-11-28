@@ -133,6 +133,61 @@ function Dialogs.ShowConfirm(title, text, onAccept)
     confirmDialog:Show()
 end
 
+-- Delete warning (delete protection) ------------------------------------------------
+-- Shown before an action removes manual work of the officer. Lists what would be lost (counts from
+-- ns.Protect) and has only two buttons: cancel and the action (e.g. "Delete"). ESC cancels.
+-- Without anything manual to lose, the plain confirmation is shown instead.
+
+local warnDialog
+function Dialogs.ShowDeleteWarning(title, text, counts, onAccept, acceptLabel)
+    local lines = ns.Protect.Lines(counts)
+    if #lines == 0 then
+        Dialogs.ShowConfirm(title, text, onAccept)
+        return
+    end
+    if not warnDialog then
+        local d = named(baseDialog(460, 200))
+        warnDialog = d
+        local icon = d:CreateTexture(nil, "ARTWORK")
+        icon:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
+        icon:SetSize(36, 36)
+        icon:SetPoint("TOPLEFT", 14, -38)
+        d.text = W.Label(d, "", "GameFontHighlight")
+        d.text:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, 0)
+        d.text:SetPoint("RIGHT", -14, 0)
+        d.text:SetJustifyV("TOP")
+        d.lost = W.Label(d, "", "GameFontNormal")
+        d.lost:SetPoint("TOPLEFT", d.text, "BOTTOMLEFT", 0, -12)
+        d.lost:SetPoint("RIGHT", -14, 0)
+        d.lost:SetJustifyV("TOP")
+        d.ok = W.Button(d, "", 130, 22, function()
+            d:Hide()
+            if d.onAccept then
+                d.onAccept()
+            end
+        end)
+        d.ok:SetPoint("BOTTOMRIGHT", -144, 12)
+        local cancel = W.Button(d, CANCEL or "Cancel", 120, 22, function()
+            d:Hide()
+        end)
+        cancel:SetPoint("BOTTOMRIGHT", -14, 12)
+        d.icon = icon
+    end
+    local d = warnDialog
+    d.title:SetText(title or "")
+    d.text:SetText(text or "")
+    local list = {}
+    for i, line in ipairs(lines) do
+        list[i] = "|cffffffff  - " .. line .. "|r"
+    end
+    d.lost:SetText("|cffff8040" .. L.PROTECT_INTRO .. "|r\n" .. table.concat(list, "\n"))
+    d.ok:SetText("|cffff6060" .. (acceptLabel or L.PROTECT_DELETE) .. "|r")
+    d.onAccept = onAccept
+    d:SetHeight(math.max(170, 40 + d.text:GetStringHeight() + 12 + d.lost:GetStringHeight() + 50))
+    d:Show()
+    d:Raise()
+end
+
 -- Write note dialog -----------------------------------------------------------------
 -- Lets the officer choose public/officer note, append/replace and edit the text before writing.
 

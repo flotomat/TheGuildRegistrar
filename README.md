@@ -33,6 +33,7 @@ Which notes are read is shown above the list and can be switched there (public n
 - **Filters & sorting**: by status, side (only in Discord / only in guild), rank mismatch, hints, online, and a **fuzzy search** over all columns (several words, umlauts/accents/apostrophes ignored, parts of words, one typo tolerated).
 - **Officer actions** (right-click): confirm (fix), remove the confirmation, **separate** a character from a Discord account (fixed ones only after a confirmation), assign another candidate, add a character or a Discord member by name, assign as alt of / mark as main, ignore, whisper, copy names, **copy a note suggestion** to paste into the guild window. The menu always shows every action; actions that do not fit an entry are greyed out and say why.
 - **Share assignments** with other officers as a code (Comparison tab), taken over in the Import tab.
+- **Delete protection**: whenever an action would remove or overwrite manual work (fixed or separated assignments, alt/main decisions, ignored entries, changed settings), a warning lists what would be lost and asks first.
 - **Writing guild notes and changing guild ranks** from the addon is not possible: WoW: Forever reserves both for the Blizzard UI. The menu entries are shown greyed out; the hints tell you what to change in the guild window.
 - **Export** of the filtered list, e.g. to post "please update your nickname" in Discord.
 - **Demo mode** (`/tgr demo`) to try everything without a guild.
