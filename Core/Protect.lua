@@ -20,6 +20,7 @@ Protect.CATEGORIES = {
     { key = "ignoredDiscord", label = "PROTECT_IGNORED_DISCORD" },
     { key = "ignoredChars", label = "PROTECT_IGNORED_CHARS" },
     { key = "dungeonRoles", label = "PROTECT_DUNGEON_ROLES" },
+    { key = "professions", label = "PROTECT_PROFESSIONS" },
     { key = "pendingNotes", label = "PROTECT_PENDING_NOTES" },
     { key = "roleMapping", label = "PROTECT_ROLE_MAPPING" },
     { key = "settings", label = "PROTECT_SETTINGS" },
@@ -82,6 +83,7 @@ function Protect.GuildData(g, withRoles)
         add(counts, "pendingNotes", Protect.PendingNotes(g))
         if withRoles then
             add(counts, "dungeonRoles", Protect.DungeonRoles(g))
+            add(counts, "professions", size(g.professions and g.professions.manual))
         end
     end
     return counts
@@ -156,7 +158,7 @@ function Protect.AltDecision(d, charFullName)
 end
 
 -- Own decisions that a shared code (Share.Parse result) would overwrite or remove (see Share.Merge).
-function Protect.Share(d, parsed)
+function Protect.Share(d, parsed, roles, profs)
     local counts = {}
     if not d or not parsed then
         return counts
@@ -172,6 +174,10 @@ function Protect.Share(d, parsed)
             add(counts, "markedMain", d.markedMain[e.a] and 1 or 0)
         elseif e.kind == "M" then
             add(counts, "twinkOf", d.twinkOf[e.a] and 1 or 0)
+        elseif e.kind == "DR" and roles and roles[e.a] then
+            add(counts, "dungeonRoles", ns.DungeonRoles.Equal(roles[e.a], e.roles) and 0 or 1)
+        elseif e.kind == "PR" and profs and profs[e.a] then
+            add(counts, "professions", ns.Professions.Equal(profs[e.a], e.profs) and 0 or 1)
         end
     end
     return counts

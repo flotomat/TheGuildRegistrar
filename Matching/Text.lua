@@ -296,6 +296,53 @@ function Text.searchForms(raw)
     return { a = a, g = g, ca = gsub(a, " ", ""), cg = gsub(g, " ", "") }
 end
 
+-- Keyword detection (dungeon roles, professions) ------------------------------------------
+
+-- Folded word -> value, from { [value] = { words } }. `keys` gives the order (first one wins on
+-- duplicates). Words may contain spaces ("Erste Hilfe"); they are matched as word pairs.
+function Text.keywordMap(lists, keys)
+    local map = {}
+    for _, value in ipairs(keys) do
+        for _, word in ipairs(lists and lists[value] or {}) do
+            local f = Text.searchForms(word)
+            for _, form in ipairs({ f.a, f.g, f.ca, f.cg }) do
+                if form ~= "" and not map[form] then
+                    map[form] = value
+                end
+            end
+        end
+    end
+    return map
+end
+
+-- Values of the keywords in a text, in order of appearance, without duplicates. Every word is
+-- checked together with the next word first ("Nahkampf DD", "Erste Hilfe"), then on its own;
+-- parts of words never match ("Tankwart" is no "Tank").
+function Text.findKeywords(text, map)
+    local out, seen = {}, {}
+    if not text or text == "" then
+        return out
+    end
+    local forms = Text.searchForms(text)
+    for _, spaced in ipairs({ forms.a, forms.g }) do
+        local words = {}
+        for w in spaced:gmatch("%S+") do
+            words[#words + 1] = w
+        end
+        local i = 1
+        while i <= #words do
+            local pair = words[i + 1] and map[words[i] .. words[i + 1]]
+            local value = pair or map[words[i]]
+            if value and not seen[value] then
+                seen[value] = true
+                out[#out + 1] = value
+            end
+            i = i + (pair and 2 or 1)
+        end
+    end
+    return out
+end
+
 -- The "nickname" part of a Discord name for note templates.
 function Text.nickname(analysis)
     if analysis.rule and analysis.rule.ok and analysis.rule.nickRaw then

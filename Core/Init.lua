@@ -13,9 +13,13 @@ events:RegisterEvent("PLAYER_GUILD_UPDATE")
 events:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
         ns.DB.Init()
+    elseif event == "ADDON_LOADED" and arg1 == "Blizzard_Communities" then
+        ns.Companion.Hook()
     elseif event == "PLAYER_LOGIN" then
-        -- nothing to do until the window is opened; keep login light
+        -- keep login light: only the companion of the guild window (it polls a few times per second)
+        ns.Companion.Init()
     elseif event == "GUILD_ROSTER_UPDATE" then
+        ns.PendingNotes.OnRosterUpdate()
         ns.Engine.OnRosterUpdate()
     elseif event == "PLAYER_GUILD_UPDATE" then
         ns.state.results = nil

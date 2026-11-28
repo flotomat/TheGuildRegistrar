@@ -104,8 +104,16 @@ function Engine.Run()
             acceptTwinkRanks = g.settings.acceptTwinkRanks,
             minStatus = g.settings.rankCheckMinStatus,
         })
+        ns.Professions.Evaluate(res.rows, { settings = settings, canViewOfficer = state.canViewOfficer,
+            manual = g.professions and g.professions.manual })
+        res.dungeonRoleCounts = ns.DungeonRoles.Evaluate(res.rows, {
+            settings = settings,
+            manual = g.dungeonRoles and g.dungeonRoles.manual,
+            canViewOfficer = state.canViewOfficer,
+        })
         res.summary.withAdvice = ns.Advice.evaluate(res.rows, {
             settings = settings,
+            canViewOfficer = state.canViewOfficer,
             rankNames = state.rankNames,
             members = res.members,
         })
@@ -195,7 +203,8 @@ function Engine.ExportDecisions()
     if not g then
         return nil, 0
     end
-    return ns.Share.Export(g.decisions, ns.DB.GuildName() or "", date("!%Y-%m-%dT%H:%M:%SZ"))
+    return ns.Share.Export(g.decisions, ns.DB.GuildName() or "", date("!%Y-%m-%dT%H:%M:%SZ"), g.dungeonRoles.manual,
+        g.professions.manual)
 end
 
 -- Merge a parsed decisions code (ns.Share.Parse) into the current guild. Returns the number of changes.
@@ -204,17 +213,18 @@ function Engine.ImportDecisions(parsed)
     if not g or not parsed or not parsed.ok then
         return 0
     end
-    local n = ns.Share.Merge(g.decisions, parsed)
+    local n = ns.Share.Merge(g.decisions, parsed, g.dungeonRoles.manual, g.professions.manual)
     Engine.Run()
     return n
 end
 
--- Delete the imported Discord list and all decisions of the current guild.
-function Engine.DeleteImportedData()
+-- Delete the imported Discord list and all decisions of the current guild (manual dungeon roles
+-- only with `withRoles`).
+function Engine.DeleteImportedData(withRoles)
     if ns.demoActive then
         return false
     end
-    if not ns.DB.DeleteImportedData() then
+    if not ns.DB.DeleteImportedData(withRoles) then
         return false
     end
     Engine.Run()
@@ -222,8 +232,8 @@ function Engine.DeleteImportedData()
 end
 
 -- Delete the Discord data of all guilds on this account. Returns the number of guilds.
-function Engine.DeleteAllImportedData()
-    local n = ns.DB.DeleteAllImportedData()
+function Engine.DeleteAllImportedData(withRoles)
+    local n = ns.DB.DeleteAllImportedData(withRoles)
     if ns.DB.Guild() then
         Engine.Run()
     elseif ns.UI and ns.UI.OnStateChanged then
@@ -441,6 +451,41 @@ function Engine.HasDecision(memberKey)
         end
     end
     return false
+end
+
+-- Dungeon roles ------------------------------------------------------------------
+
+-- Manual dungeon roles of a character: a list (may be empty = explicitly none), or nil = automatic.
+function Engine.GetManualDungeonRoles(charFullName)
+    local g = ns.DB.Guild()
+    return g and g.dungeonRoles.manual[charFullName]
+end
+
+-- Set manual dungeon roles (list, at most DungeonRoles.MAX, only roles the class allows),
+-- or nil to go back to the automatic detection.
+function Engine.SetDungeonRoles(charFullName, roles)
+    local g = ns.DB.Guild()
+    if not g then
+        return
+    end
+    g.dungeonRoles.manual[charFullName] = roles and ns.DungeonRoles.Sort(roles) or nil
+    Engine.Run()
+end
+
+-- Manual professions of a character: a list (may be empty = explicitly none), or nil = from the notes.
+function Engine.GetManualProfessions(charFullName)
+    local g = ns.DB.Guild()
+    return g and g.professions.manual[charFullName]
+end
+
+-- Set manual professions (list) or nil to read them from the notes again.
+function Engine.SetProfessions(charFullName, list)
+    local g = ns.DB.Guild()
+    if not g then
+        return
+    end
+    g.professions.manual[charFullName] = list and ns.Professions.Sort(list) or nil
+    Engine.Run()
 end
 
 -- Demo mode -------------------------------------------------------------------

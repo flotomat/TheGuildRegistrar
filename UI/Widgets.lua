@@ -20,6 +20,94 @@ W.ICON_ONLINE = "|TInterface/FriendsFrame/StatusIcon-Online:10|t"
 W.ICON_OK = "|TInterface/RaidFrame/ReadyCheck-Ready:12|t"
 W.ICON_BAD = "|TInterface/RaidFrame/ReadyCheck-NotReady:12|t"
 W.ICON_UNKNOWN = "|TInterface/RaidFrame/ReadyCheck-Waiting:12|t"
+-- check mark for menu entries; the "unchecked" variant shows a transparent corner of the same texture
+W.ICON_CHECK = "|TInterface/Buttons/UI-CheckBox-Check:14:14|t"
+W.ICON_NOCHECK = "|TInterface/Buttons/UI-CheckBox-Check:14:14:0:0:32:32:0:2:0:2|t"
+
+-- Dungeon role icons (own textures in Media/)
+local ROLE_TEXTURES = {
+    tank = "Interface/AddOns/TheGuildRegistrar/Media/RoleTank",
+    heal = "Interface/AddOns/TheGuildRegistrar/Media/RoleHeal",
+    melee = "Interface/AddOns/TheGuildRegistrar/Media/RoleMelee",
+    ranged = "Interface/AddOns/TheGuildRegistrar/Media/RoleRanged",
+}
+W.ROLE_TEXTURES = ROLE_TEXTURES
+
+function W.RoleIcon(role, size)
+    local tex = ROLE_TEXTURES[role]
+    if not tex then
+        return ""
+    end
+    size = size or 14
+    return string.format("|T%s:%d:%d|t", tex, size, size)
+end
+
+-- Icons of a list of roles ("" for none).
+function W.RoleIcons(roles, size)
+    local parts = {}
+    for _, r in ipairs(roles or {}) do
+        parts[#parts + 1] = W.RoleIcon(r, size)
+    end
+    return table.concat(parts, " ")
+end
+
+-- "<icon> Tank, <icon> Healer" (localized names).
+function W.RoleNames(roles, withIcons)
+    local L = ns.L
+    local parts = {}
+    for _, r in ipairs(roles or {}) do
+        local name = L["DROLE_" .. r:upper()] or r
+        parts[#parts + 1] = withIcons and (W.RoleIcon(r, 12) .. " " .. name) or name
+    end
+    return table.concat(parts, ", ")
+end
+
+-- Profession icons (own textures in Media/)
+local PROF_TEXTURE = {
+    alchemy = "ProfAlchemy", blacksmithing = "ProfBlacksmithing", enchanting = "ProfEnchanting",
+    engineering = "ProfEngineering", herbalism = "ProfHerbalism", leatherworking = "ProfLeatherworking",
+    mining = "ProfMining", skinning = "ProfSkinning", tailoring = "ProfTailoring", cooking = "ProfCooking",
+    fishing = "ProfFishing", firstaid = "ProfFirstaid",
+}
+
+function W.ProfIcon(p, size)
+    local name = PROF_TEXTURE[p]
+    if not name then
+        return ""
+    end
+    size = size or 14
+    return string.format("|TInterface/AddOns/TheGuildRegistrar/Media/%s:%d:%d|t", name, size, size)
+end
+
+function W.ProfIcons(list, size)
+    local parts = {}
+    for _, p in ipairs(list or {}) do
+        parts[#parts + 1] = W.ProfIcon(p, size)
+    end
+    return table.concat(parts, "")
+end
+
+-- Note button icons (own textures in Media/)
+W.NOTE_TEXTURES = {
+    public = "Interface/AddOns/TheGuildRegistrar/Media/NotePublic",
+    officer = "Interface/AddOns/TheGuildRegistrar/Media/NoteOfficer",
+    auto = "Interface/AddOns/TheGuildRegistrar/Media/NoteAuto",
+}
+
+function W.NoteIcon(kind, size)
+    size = size or 14
+    return string.format("|T%s:%d:%d|t", W.NOTE_TEXTURES[kind], size, size)
+end
+
+-- "Alchemie, Bergbau" (localized profession names).
+function W.ProfessionNames(list)
+    local L = ns.L
+    local parts = {}
+    for _, p in ipairs(list or {}) do
+        parts[#parts + 1] = L["PROF_" .. p:upper()] or p
+    end
+    return table.concat(parts, ", ")
+end
 
 function W.Hex(rgb)
     return string.format("ff%02x%02x%02x", rgb[1] * 255, rgb[2] * 255, rgb[3] * 255)

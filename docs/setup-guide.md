@@ -66,20 +66,43 @@ To update the list later: start the app → **Export to clipboard** → paste in
 - **alts** hold an alt rank or have a note like `alt of Wurstinator` / `Twink Wurstinator` (an alt whose note names the Discord account is found as well),
 - optionally the Discord names follow a **naming rule** such as `Nickname | Main`.
 
-Which notes are read is shown above the list in the Comparison tab (*Assignment by character names and: ...*) and can be switched there or in the Options tab. Notes that are not used are shown in grey. Manual assignments are the **fallback** for single cases (see below) and can be shared with other officers.
+Which notes are read is shown above the list in the Comparison tab (*Assignment by character names and: ...*) and can be switched there or under Options > General. Notes that are not used are shown in grey. Manual assignments are the **fallback** for single cases (see below) and can be shared with other officers.
 
-- **Ranks tab**: assign each Discord role to the guild rank it stands for, mark guest roles (e.g. *Guest*) and alt ranks.
-- **Options tab**: naming rule (e.g. `Nickname | Main`), which notes to use, whether alts are called "Alts" or "Twinks", alt patterns, note templates and the optional note check, ignored words, thresholds.
+The **Options** tab has four sub tabs:
+
+- **General**: naming rule (e.g. `Nickname | Main`), which notes to use, whether alts are called "Alts" or "Twinks", alt patterns, ignored words, thresholds, search.
+- **Ranks**: assign each Discord role to the guild rank it stands for, mark the Discord roles of guests (e.g. *Guest*) and alt ranks.
+- **Dungeon roles**: sources and their order, keywords, overview of the classes (see below).
+- **Notes**: four templates (main/alt × public/officer note) with one "check" box per note (off: no check, no suggestions), plus the abbreviations for dungeon roles and professions. Defaults: officer note `DC: {discord}` or `Alt {discord}` (an officer keeps the Discord link up to date once), public note `{roles} | {professions}`, e.g. `Tank/mDD | BS/Mining`; empty placeholders leave no separators behind. The abbreviations follow the game language (English or German) and can be changed. Professions are read from the notes (English and German names and common abbreviations); the note check recognizes dungeon roles and professions in any known spelling.
 - In the **Comparison** tab, the column *To change* (and the tooltip) tells you what to fix: guild rank, alt status, guild note, assignment, Discord name. Click **+** to show the alts of a player.
-- The **search** in the Comparison tab covers all columns (Discord name and roles, character, realm, both notes, rank, class, level, status, hints). With several words, all of them must appear. Upper/lower case, umlauts (`koerper` finds *Körper*), accents and apostrophes do not matter, parts of words are found, and from 4 letters on one typo is tolerated (can be switched off in the Options tab). Hits hidden by other filters are counted above the list and can be shown with a click; the tooltip tells where the hit is.
-- **Right-click** an entry (or an alt below it) for all actions. Actions that do not fit the entry are greyed out; the tooltip says why.
+- The **search** in the Comparison tab covers all columns (Discord name and roles, character, realm, dungeon roles, both notes, rank, class, level, status, hints). With several words, all of them must appear. Upper/lower case, umlauts (`koerper` finds *Körper*), accents and apostrophes do not matter, parts of words are found, and from 4 letters on one typo is tolerated (can be switched off under Options > General). Hits hidden by other filters are counted above the list and can be shown with a click; the tooltip tells where the hit is.
+- **Right-click** an entry (or an alt below it). What the menu offers depends on the column:
+  - *Status*, *Discord*, *Character*: assignments (Discord member, alt / main),
+  - *Dungeon* and *Professions*: only the dungeon roles or professions of that character,
+  - *Notes*: only preparing notes and note suggestions,
+  - *Rank* and *To change*: all actions.
+
+  Actions that do not fit the entry are greyed out; the tooltip says why.
   - **Confirm assignment (fix it)**: the assignment no longer changes automatically.
   - **Remove confirmation**: back to automatic assignment.
   - **Separate from this Discord member**: the character (with its alts, if it is a main) is no longer assigned to this Discord account. For a confirmed assignment a window asks first. Undo with *Reset manual decisions*.
   - **Add character by name** / **Assign to Discord member by name**, **Assign other candidate**, **Assign as alt of** / **Mark as main**, ignore, whisper, copy a note suggestion.
+- **Professions**: read from the notes (English and German names and common abbreviations) or set by right-click in the *Professions* column (at most two main professions plus Cooking, Fishing, First Aid). Column with icons, filter in the menu at the top right; manual professions are shared like dungeon roles.
+- **Dungeon roles** (Tank, Healer, Melee DD, Ranged DD): every character can have up to two, one set for dungeons and raids. Column *Dungeon* with icons (shield, green plus, crossed swords, bow), filter at the top right (one menu for dungeon role and profession, both can be combined), counts in the status line. The addon reads them from these sources; the first one that names a role wins (order and on/off under Options > Dungeon roles):
+  1. **manual**: right-click > *Set dungeon role* (only roles the class has),
+  2. **Discord roles** such as *Tank* or *Healer* - only if the Discord member has exactly one character, otherwise a hint,
+  3. **officer note**, 4. **public note**, e.g. `DC: Jens, Tank` or `Healer/Tank`.
+
+  A generic "DD"/"DPS" is resolved by the class if it has only one kind of DD (e.g. Rogue → melee, Mage → ranged); for Hunter, Druid and Shaman you get a hint. Specializations are not evaluated. Contradicting sources and roles the class does not have show up as hints. Manual dungeon roles are passed on with *Share assignments* and are kept when the Discord data is deleted (unless *Also delete manual dungeon roles* is checked).
 - **Delete protection**: before an action removes or overwrites manual work, a warning lists what would be lost (e.g. *Fixed assignments: 3*, *Ignored characters: 1*, *changed settings*), with only two buttons: Cancel and e.g. Delete. This covers deleting imported data, resets (Discord member, alt/main, settings), removing a confirmation, separating, replacing a fixed assignment by another Discord member and taking over a shared code that overwrites your own decisions.
 - **Share assignments** (Comparison tab) creates a code with your manual decisions. Give it to other officers, e.g. as a text file in Discord; they paste it into their **Import** tab and confirm. Shared entries replace their own decisions for the same characters. The code contains Discord names and assignments - only share it with people who may see them.
-- Writing guild notes and changing guild ranks is reserved for the Blizzard UI in WoW: Forever, so do this in the guild window. The addon shows these menu entries greyed out.
+- **Preparing guild notes**: addons may not write guild notes in WoW: Forever, so the addon prepares the text and you paste it in Blizzard's guild window:
+  1. In the *Notes* column, every character has three buttons: prepare the public note, the officer note (each in a dialog with a 31-byte counter and the template suggestion), or both automatically from the templates. **Prepare notes ...** at the bottom does this for all characters whose note does not fit the template (from a chosen status, default *certain*); prepared notes are kept. Prepared texts are shown in gold.
+  2. Open the guild window (Roster). A panel next to it shows the prepared notes of the selected member (click to edit) and who else has prepared notes.
+  3. Open the note in the guild window: below Blizzard's dialog a box with the prepared text appears, already selected. **Ctrl+C**, click into Blizzard's field, **Ctrl+A**, **Ctrl+V**, **Enter**.
+  4. As soon as the roster shows the new note, it is ticked off (sound + short message). Panel, copy box and feedback can be switched off under Options > Notes.
+
+  Changing guild ranks is reserved for the Blizzard UI as well; that menu entry is greyed out.
 
 ## 7. Other officers
 

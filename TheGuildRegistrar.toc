@@ -31,6 +31,8 @@ Matching\Players.lua
 Matching\Matcher.lua
 Matching\Ranks.lua
 Matching\Advice.lua
+Matching\DungeonRoles.lua
+Matching\Professions.lua
 Core\Defaults.lua
 Core\Demo.lua
 
@@ -39,6 +41,7 @@ Core\DB.lua
 Core\Protect.lua
 Data\Roster.lua
 Data\Notes.lua
+Data\PendingNotes.lua
 Data\RankChange.lua
 Core\Engine.lua
 
@@ -51,7 +54,9 @@ UI\SetupTab.lua
 UI\ImportTab.lua
 UI\ResultTab.lua
 UI\RanksTab.lua
+UI\DungeonRolesTab.lua
 UI\OptionsTab.lua
+UI\GuildCompanion.lua
 UI\SettingsPanel.lua
 
 Core\Init.lua

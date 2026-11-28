@@ -1,4 +1,4 @@
--- The Guild Registrar - "Ranks" tab: Discord role -> guild rank, guest roles, twink ranks
+-- The Guild Registrar - Settings page "Ranks": Discord role -> guild rank, guest roles, twink ranks
 
 local _, ns = ...
 
@@ -110,7 +110,7 @@ local function create(parent)
         end,
     })
     list:SetPoint("TOPLEFT", 8, -100)
-    list:SetSize(520, 380)
+    list:SetSize(520, 350)
     f.list = list
 
     f.noRoles = W.Label(f, L.RANKS_NO_IMPORT, "GameFontDisable")
@@ -202,4 +202,4 @@ local function refresh(f)
     f.Update()
 end
 
-ns.UI.RegisterTab({ key = "ranks", order = 4, title = L.TAB_RANKS, create = create, refresh = refresh })
+ns.UI.RegisterSettingsPage({ key = "ranks", order = 2, title = L.SETTINGS_PAGE_RANKS, create = create, refresh = refresh })

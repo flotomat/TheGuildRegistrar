@@ -188,23 +188,175 @@ function Dialogs.ShowDeleteWarning(title, text, counts, onAccept, acceptLabel)
     d:Raise()
 end
 
+-- Prepare note dialog ------------------------------------------------------------------
+-- Edit the prepared text of one note (public or officer) with a byte counter (guild notes hold at
+-- most 31 bytes). `row` may be nil (opened from the guild window companion): then no template
+-- suggestion is offered.
+
+local prepDialog
+
+local function prepUpdate()
+    local d = prepDialog
+    local text = ns.Util.trim(d.edit:GetText())
+    local bytes = #text
+    local max = ns.Notes.MAX_BYTES
+    if bytes > max then
+        d.counter:SetText(string.format("|cffff4444%d/%d %s - %s|r", bytes, max, L.PENDING_BYTES, L.NOTE_TOO_LONG))
+    else
+        d.counter:SetText(string.format("|cff999999%d/%d %s|r", bytes, max, L.PENDING_BYTES))
+    end
+    d.ok:SetEnabled(bytes <= max)
+end
+
+function Dialogs.ShowPrepareNote(row, c, kind)
+    local g = ns.DB.Guild()
+    if not g or not c then
+        return
+    end
+    if not prepDialog then
+        local d = named(baseDialog(540, 214))
+        prepDialog = d
+        d.target = W.Label(d, "", "GameFontHighlight")
+        d.target:SetPoint("TOPLEFT", 14, -38)
+        d.target:SetPoint("RIGHT", -14, 0)
+        d.current = W.Label(d, "", "GameFontHighlightSmall")
+        d.current:SetPoint("TOPLEFT", 14, -60)
+        d.current:SetPoint("RIGHT", -14, 0)
+        d.edit = W.EditBox(d, 500, 22)
+        d.edit:SetPoint("TOPLEFT", 20, -84)
+        d.edit:SetScript("OnTextChanged", prepUpdate)
+        d.counter = W.Label(d, "", "GameFontHighlightSmall")
+        d.counter:SetPoint("TOPLEFT", d.edit, "BOTTOMLEFT", -2, -6)
+        d.hint = W.Label(d, L.PENDING_DIALOG_HINT, "GameFontDisableSmall")
+        d.hint:SetPoint("TOPLEFT", d.counter, "BOTTOMLEFT", 0, -8)
+        d.hint:SetPoint("RIGHT", -14, 0)
+        d.hint:SetJustifyV("TOP")
+
+        local function accept()
+            if not d.ok:IsEnabled() then
+                return
+            end
+            ns.PendingNotes.Set(d.char.fullName, d.kind, d.edit:GetText(), d.currentText)
+            d:Hide()
+        end
+        d.ok = W.Button(d, L.PENDING_OK, 120, 22, accept)
+        d.ok:SetPoint("BOTTOMRIGHT", -140, 12)
+        d.edit:SetScript("OnEnterPressed", accept)
+        local cancel = W.Button(d, CANCEL or "Cancel", 120, 22, function()
+            d:Hide()
+        end)
+        cancel:SetPoint("BOTTOMRIGHT", -14, 12)
+        d.suggest = W.Button(d, L.PENDING_SUGGEST, 120, 22, function()
+            if d.suggestion then
+                d.edit:SetText(d.suggestion)
+                d.edit:SetFocus()
+            end
+        end)
+        d.suggest:SetPoint("BOTTOMLEFT", 14, 12)
+        d.remove = W.Button(d, L.PENDING_REMOVE, 150, 22, function()
+            local char, kind_ = d.char, d.kind
+            d:Hide()
+            ns.Dialogs.ShowDeleteWarning(L.PENDING_REMOVE, string.format(L.PENDING_REMOVE_CONFIRM, char.name),
+                { pendingNotes = 1 }, function()
+                    ns.PendingNotes.Set(char.fullName, kind_, nil)
+                end)
+        end)
+        d.remove:SetPoint("LEFT", d.suggest, "RIGHT", 8, 0)
+    end
+    local d = prepDialog
+    d.char, d.kind = c, kind
+    local label = (kind == "officer") and L.NOTE_OFFICER or L.NOTE_PUBLIC
+    d.title:SetText(L.PENDING_DIALOG_TITLE .. " - " .. label)
+    d.target:SetText(W.Colorize(c.name, W.ClassColor(c.classFile))
+        .. ((row and row.member) and ("  |cff888888(" .. row.member.display .. ")|r") or ""))
+    d.currentText = (kind == "officer") and c.officerNote or c.note
+    d.current:SetText(L.PENDING_CURRENT .. " |cffffffff" .. ((d.currentText and d.currentText ~= "") and d.currentText
+        or ("|cff777777" .. L.PENDING_EMPTY .. "|r")) .. "|r")
+    d.suggestion = row and ns.Advice.suggestedNote(row, c, g.settings, kind) or nil
+    d.suggest:SetEnabled(d.suggestion ~= nil)
+    local pending = ns.PendingNotes.Get(c.fullName, kind)
+    d.remove:SetEnabled(pending ~= nil)
+    d.edit:SetText(pending or d.suggestion or d.currentText or "")
+    prepUpdate()
+    d:Show()
+    d:Raise()
+    d.edit:SetFocus()
+    d.edit:HighlightText()
+end
+
+-- Mass preparation dialog ---------------------------------------------------------------
+
+local massDialog
+local MASS_STATUS = { "confirmed", "sure", "likely", "unlikely" }
+
+function Dialogs.ShowMassPrepare(rows)
+    local g = ns.DB.Guild()
+    if not g then
+        return
+    end
+    if not massDialog then
+        local d = named(baseDialog(520, 230))
+        massDialog = d
+        d.text = W.Label(d, "", "GameFontHighlight")
+        d.text:SetPoint("TOPLEFT", 14, -38)
+        d.text:SetPoint("RIGHT", -14, 0)
+        d.text:SetJustifyV("TOP")
+        local lbl = W.Label(d, L.PENDING_MASS_MIN, "GameFontNormal")
+        lbl:SetPoint("TOPLEFT", 14, -118)
+        local options = {}
+        for _, st in ipairs(MASS_STATUS) do
+            options[#options + 1] = { value = st, text = L["PENDING_MASS_" .. st:upper()] }
+        end
+        d.cycle = W.Cycle(d, 230, options, function()
+            local s = ns.DB.Guild()
+            return s and s.settings.notesMinStatus or "sure"
+        end, function(v)
+            local s = ns.DB.Guild()
+            if s then
+                s.settings.notesMinStatus = v
+            end
+            d.Preview()
+        end)
+        d.cycle:SetPoint("LEFT", lbl, "RIGHT", 10, 0)
+        d.preview = W.Label(d, "", "GameFontHighlight")
+        d.preview:SetPoint("TOPLEFT", 14, -150)
+        d.preview:SetPoint("RIGHT", -14, 0)
+        d.ok = W.Button(d, L.PENDING_OK, 120, 22, function()
+            local s = ns.DB.Guild()
+            local n = ns.PendingNotes.Mass(d.rows, s.settings, s.settings.notesMinStatus)
+            d:Hide()
+            ns.Engine.Print(string.format(L.PENDING_MASS_DONE, n))
+        end)
+        d.ok:SetPoint("BOTTOMRIGHT", -140, 12)
+        local cancel = W.Button(d, CANCEL or "Cancel", 120, 22, function()
+            d:Hide()
+        end)
+        cancel:SetPoint("BOTTOMRIGHT", -14, 12)
+        function d.Preview()
+            local s = ns.DB.Guild()
+            local n = ns.PendingNotes.Mass(d.rows, s.settings, s.settings.notesMinStatus, true)
+            d.preview:SetText(string.format(L.PENDING_MASS_PREVIEW, n))
+            d.ok:SetEnabled(n > 0)
+        end
+    end
+    local d = massDialog
+    d.rows = rows
+    local kinds = {}
+    for _, k in ipairs(ns.PendingNotes.AutoKinds(g.settings)) do
+        kinds[#kinds + 1] = (k == "officer") and L.NOTE_OFFICER or L.NOTE_PUBLIC
+    end
+    d.title:SetText(L.PENDING_MASS_TITLE)
+    d.text:SetText(string.format(L.PENDING_MASS_TEXT, #kinds > 0 and table.concat(kinds, ", ") or L.NONE))
+    d.cycle.Refresh()
+    d.Preview()
+    d:Show()
+    d:Raise()
+end
+
 -- Write note dialog -----------------------------------------------------------------
 -- Lets the officer choose public/officer note, append/replace and edit the text before writing.
 
 local noteDialog
-local function noteValues(row, char)
-    local m = row.member
-    local isTwink = char.isTwink and char.player and char.player.main ~= char
-    local mainName = (row.player and row.player.main and row.player.main.name) or char.name
-    local nick = m and ns.Text.nickname(m.analysis) or ""
-    return {
-        discord = m and m.display or "",
-        nick = nick,
-        main = mainName,
-        char = char.name,
-    }, isTwink
-end
-
 local function updateNotePreview()
     local d = noteDialog
     local addition = d.edit:GetText()
@@ -311,12 +463,13 @@ function Dialogs.ShowWriteNote(row, char)
     d.row, d.char = row, char
     d.mode = g.settings.noteWriteMode or "append"
     d.modeButton.Refresh()
-    local values, isTwink = noteValues(row, char)
-    local template = isTwink and g.settings.twinkNoteTemplate or g.settings.noteTemplate
+    local values = ns.Advice.templateValues(row, char, g.settings)
+    local template = ns.Advice.template(row, char, g.settings, ns.Notes.CanEdit("officer") and "officer" or "public")
+        or ns.Advice.template(row, char, g.settings, "public") or ""
     d.title:SetText(L.NOTE_DIALOG_TITLE)
     d.target:SetText(string.format(L.NOTE_TARGET, W.Colorize(char.name, W.ClassColor(char.classFile)),
         row.member and row.member.display or "-"))
-    d.edit:SetText(ns.Util.format(template, values))
+    d.edit:SetText(template ~= "" and ns.Advice.render(template, values) or "")
 
     local canPublic, canOfficer = ns.Notes.CanEdit("public"), ns.Notes.CanEdit("officer")
     d.checks.public:SetEnabled(canPublic)

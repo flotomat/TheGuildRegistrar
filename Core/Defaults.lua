@@ -5,6 +5,7 @@ local _, ns = ...
 
 -- German players say "Twink", English players "alt": the default term and note template follow the game language.
 local GERMAN = (ns.activeLocale == "deDE")
+local L = ns.L
 
 -- Game actions the addon could perform, but which Blizzard reserves for its own UI.
 -- WoW: Forever (1.60.x) blocks addons from writing guild notes (C_GuildInfo.SetNote - refused
@@ -25,8 +26,6 @@ ns.DEFAULT_SETTINGS = {
     -- what alternative characters are called in the addon: "twink" | "alt"
     altTerm = GERMAN and "twink" or "alt",
 
-    -- check that the guild note contains the expected text (note templates below): "officer" | "public" | "off"
-    noteCheck = "officer",
 
     -- optional naming rule for Discord display names, e.g. "Nickname | Main character"
     nameRule = {
@@ -89,6 +88,24 @@ ns.DEFAULT_SETTINGS = {
     -- search in the Comparison tab: words of 4+ letters are also found with one typo
     searchTypos = true,
 
+    -- dungeon roles: sources in order of priority (each can be switched off)
+    dungeonRoleSources = {
+        { key = "manual", on = true },
+        { key = "discord", on = true },
+        { key = "officer", on = true },
+        { key = "public", on = true },
+    },
+    -- words that name a dungeon role in Discord roles and guild notes ("dd" = damage dealer of any kind)
+    dungeonRoleKeywords = {
+        tank = { "Tank", "Tanks", "Maintank", "Offtank", "Tanker" },
+        heal = { "Heal", "Heals", "Healer", "Healers", "Heiler", "Heilerin", "Heilung", "Healing" },
+        melee = { "Melee", "Nahkampf", "Nahkämpfer", "Nahkämpferin", "MDD", "MDPS", "Melee DD", "Melee DPS",
+            "Nahkampf DD" },
+        ranged = { "Ranged", "Range", "Fernkampf", "Fernkämpfer", "Fernkämpferin", "RDD", "RDPS", "Range DD",
+            "Ranged DD", "Ranged DPS", "Fernkampf DD", "Caster" },
+        dd = { "DD", "DPS", "Damage", "Schaden", "Damagedealer", "Schadensverursacher" },
+    },
+
     -- classification thresholds
     thresholds = { sure = 0.90, likely = 0.70, unlikely = 0.45, margin = 0.15 },
 
@@ -97,9 +114,40 @@ ns.DEFAULT_SETTINGS = {
     rankCheckMinStatus = "likely", -- "sure" | "likely" | "unlikely"
     acceptTwinkRanks = true,
 
-    -- note templates: used for suggestions, the note check and (if allowed) writing notes
-    noteTemplate = "DC: {discord}",
-    twinkNoteTemplate = GERMAN and "Twink {main}" or "Alt of {main}",
+    -- note templates per character type and note: used for suggestions and the note check.
+    -- The officer note links the Discord account (kept up to date by officers), the public note
+    -- shows dungeon roles and professions.
+    noteTemplates = {
+        mainPublic = "{roles} | {professions}",
+        mainOfficer = "DC: {discord}",
+        twinkPublic = "{roles} | {professions}",
+        twinkOfficer = GERMAN and "Twink {discord}" or "Alt {discord}",
+    },
+    -- revision of the defaults above: older saved defaults are updated (see DB.lua)
+    defaultsRev = 2,
+
+    -- prepared notes (guild window companion, copy box, tick-off feedback, mass preparation)
+    notesCompanion = true,
+    notesCopyBox = true,
+    notesTickFeedback = true,
+    notesMinStatus = "sure", -- "confirmed" | "sure" | "likely" | "unlikely"
+    -- check whether the notes of assigned members contain the template text (switches the templates on/off)
+    noteCheckPublic = true,
+    noteCheckOfficer = true,
+
+    -- abbreviations for the placeholders {roles} and {professions}; defaults follow the game language
+    abbreviations = {
+        roles = {
+            tank = L.ABBR_ROLE_TANK, heal = L.ABBR_ROLE_HEAL, melee = L.ABBR_ROLE_MELEE, ranged = L.ABBR_ROLE_RANGED,
+        },
+        professions = {
+            alchemy = L.ABBR_PROF_ALCHEMY, blacksmithing = L.ABBR_PROF_BLACKSMITHING,
+            enchanting = L.ABBR_PROF_ENCHANTING, engineering = L.ABBR_PROF_ENGINEERING,
+            herbalism = L.ABBR_PROF_HERBALISM, leatherworking = L.ABBR_PROF_LEATHERWORKING,
+            mining = L.ABBR_PROF_MINING, skinning = L.ABBR_PROF_SKINNING, tailoring = L.ABBR_PROF_TAILORING,
+            cooking = L.ABBR_PROF_COOKING, fishing = L.ABBR_PROF_FISHING, firstaid = L.ABBR_PROF_FIRSTAID,
+        },
+    },
     noteWriteMode = "append", -- "append" | "replace"
 }
 
@@ -109,6 +157,8 @@ ns.DEFAULT_FILTERS = {
     rankMismatch = false,
     ruleIssues = false,
     onlineOnly = false,
+    dungeonRole = "all", -- "all" | "tank" | "heal" | "melee" | "ranged" | "none"
+    profession = "all", -- "all" | profession key | "none"
     search = "",
     sortKey = "status",
     sortAsc = true,

@@ -5,7 +5,7 @@ local _, ns = ...
 local DB = {}
 ns.DB = DB
 
-DB.VERSION = 2
+DB.VERSION = 3
 
 local Util = ns.Util
 
@@ -26,6 +26,9 @@ local MIGRATIONS = {
             end
         end
     end,
+    -- 2 -> 3: manual dungeon roles, stored apart from the decisions (deleting the Discord data keeps
+    -- them): g.dungeonRoles.manual[charFullName] = { roles }. Created on demand by ensureGuildData.
+    [2] = function() end,
 }
 
 function DB.Init()
@@ -70,6 +73,63 @@ function DB.GuildName()
     return name
 end
 
+-- Settings of older versions: one template for mains and one for alts plus a switch which note
+-- is checked -> four templates (main/alt x public/officer) and one check box per note.
+local function migrateNoteSettings(s)
+    if s.noteTemplate == nil and s.twinkNoteTemplate == nil and s.noteCheck == nil then
+        return
+    end
+    local t = Util.copy(ns.DEFAULT_SETTINGS.noteTemplates)
+    local check = s.noteCheck or "officer"
+    local main, alt = s.noteTemplate or t.mainOfficer, s.twinkNoteTemplate or t.twinkOfficer
+    if check == "public" then
+        t.mainPublic, t.twinkPublic = main, alt
+        s.noteCheckPublic, s.noteCheckOfficer = true, false
+    else
+        t.mainOfficer, t.twinkOfficer = main, alt
+        s.noteCheckPublic = check ~= "off"
+        s.noteCheckOfficer = check ~= "off"
+    end
+    s.noteTemplates = s.noteTemplates or t
+    s.noteTemplate, s.twinkNoteTemplate, s.noteCheck = nil, nil, nil
+end
+
+-- Defaults that changed: values the officer never edited are replaced by the new defaults.
+local OLD_DEFAULTS = {
+    noteTemplates = {
+        mainPublic = { "{roles} {professions}" },
+        twinkPublic = { "{roles} {professions}" },
+        twinkOfficer = { "Twink {main}", "Alt of {main}" },
+    },
+    heal = { "Heiler" },
+}
+local function updateDefaults(s)
+    if (s.defaultsRev or 1) >= 2 then
+        return
+    end
+    local function isOld(list, v)
+        for _, old in ipairs(list) do
+            if v == old then
+                return true
+            end
+        end
+        return false
+    end
+    local new = ns.DEFAULT_SETTINGS
+    if s.noteTemplates then
+        for key, olds in pairs(OLD_DEFAULTS.noteTemplates) do
+            if isOld(olds, s.noteTemplates[key]) then
+                s.noteTemplates[key] = new.noteTemplates[key]
+            end
+        end
+    end
+    local roles = s.abbreviations and s.abbreviations.roles
+    if roles and isOld(OLD_DEFAULTS.heal, roles.heal) then
+        roles.heal = new.abbreviations.roles.heal
+    end
+    s.defaultsRev = 2
+end
+
 local function ensureDecisions(g)
     g.decisions = g.decisions or {}
     local d = g.decisions
@@ -101,8 +161,16 @@ function DB.Guild()
                 timestamp = parsed.timestamp, importedAt = time() }
         end
     end
+    if g.settings then
+        migrateNoteSettings(g.settings)
+        updateDefaults(g.settings)
+    end
     g.settings = Util.fillDefaults(g.settings or {}, ns.DEFAULT_SETTINGS)
     ensureDecisions(g)
+    g.dungeonRoles = g.dungeonRoles or {}
+    g.dungeonRoles.manual = g.dungeonRoles.manual or {} -- [charFullName] = { "tank", ... } (may be empty)
+    g.professions = g.professions or {}
+    g.professions.manual = g.professions.manual or {} -- [charFullName] = { "mining", ... } (may be empty)
     ns.SetAltTerm(g.settings.altTerm)
     return g, key
 end
@@ -127,12 +195,17 @@ function DB.ClearDecisions(which)
     end
 end
 
--- True if a guild entry holds Discord data (imported list or any decision - they contain Discord names).
-function DB.HasDiscordData(g)
+-- True if a guild entry holds Discord data (imported list, any decision or prepared note - they
+-- contain Discord names). With `withRoles`, manual dungeon roles count as well.
+function DB.HasDiscordData(g, withRoles)
     if not g then
         return false
     end
-    if g.import then
+    if g.import or (g.pendingNotes and next(g.pendingNotes)) then
+        return true
+    end
+    if withRoles and ((g.dungeonRoles and g.dungeonRoles.manual and next(g.dungeonRoles.manual))
+        or (g.professions and g.professions.manual and next(g.professions.manual))) then
         return true
     end
     local d = g.decisions
@@ -148,11 +221,11 @@ function DB.HasDiscordData(g)
 end
 
 -- Keys ("Guild-Realm") of all real guilds (not the demo) that hold Discord data, sorted.
-function DB.GuildsWithData()
+function DB.GuildsWithData(withRoles)
     local keys = {}
     if ns.db and ns.db.guilds then
         for key, g in pairs(ns.db.guilds) do
-            if key ~= ns.Demo.GUILD_KEY and DB.HasDiscordData(g) then
+            if key ~= ns.Demo.GUILD_KEY and DB.HasDiscordData(g, withRoles) then
                 keys[#keys + 1] = key
             end
         end
@@ -161,29 +234,35 @@ function DB.GuildsWithData()
     return keys
 end
 
-local function clearDiscordData(g)
+local function clearDiscordData(g, withRoles)
     g.import = nil
     g.decisions = nil
+    g.pendingNotes = nil
     ensureDecisions(g)
+    if withRoles then
+        g.dungeonRoles = { manual = {} }
+        g.professions = { manual = {} }
+    end
 end
 
--- Delete all Discord data of the current guild: the imported list and every decision
--- (they contain Discord names). Settings such as the rank mapping are kept.
-function DB.DeleteImportedData()
+-- Delete all Discord data of the current guild: the imported list, every decision and prepared
+-- notes (they contain Discord names). Settings such as the rank mapping are kept; manual dungeon
+-- roles only go with `withRoles`.
+function DB.DeleteImportedData(withRoles)
     local g = DB.Guild()
     if not g then
         return false
     end
-    clearDiscordData(g)
+    clearDiscordData(g, withRoles)
     return true
 end
 
 -- Delete the Discord data of every guild on this account (not the demo). Settings are kept.
 -- Returns the number of guilds whose data was deleted.
-function DB.DeleteAllImportedData()
-    local keys = DB.GuildsWithData()
+function DB.DeleteAllImportedData(withRoles)
+    local keys = DB.GuildsWithData(withRoles)
     for _, key in ipairs(keys) do
-        clearDiscordData(ns.db.guilds[key])
+        clearDiscordData(ns.db.guilds[key], withRoles)
     end
     return #keys
 end

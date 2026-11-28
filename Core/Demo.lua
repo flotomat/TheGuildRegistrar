@@ -12,15 +12,15 @@ Demo.RANKS = { "Gildenmeister", "Offizier", "Raider", "Mitglied", "Twink", "Neul
 
 Demo.IMPORT = table.concat({
     "#TGR1;2026-11-24T20:00:00Z;Demo-Server",
-    "@roles;Gildenleitung,Offizier,Raider,Mitglied,Austauschschüler,Gast",
-    "Jens | Wurstinator;Raider",
-    "Fluffy | Rolf;Offizier",
+    "@roles;Gildenleitung,Offizier,Raider,Mitglied,Austauschschüler,Gast,Tank,Heiler,DD",
+    "Jens | Wurstinator;Raider,Tank",
+    "Fluffy | Rolf;Offizier,Heiler",
     "Anna | Gamblergirl;Raider",
     "MatroseHirnlos | Rüdiger;Mitglied",
     "BauchHaengeSchwein | Jan-Lars;Mitglied",
-    "MotzHard Nils;Raider",
-    "KörperKlaus;Mitglied",
-    "Tina | Sonnenblume;Gildenleitung,Raider",
+    "MotzHard Nils;Raider,DD",
+    "KörperKlaus;Mitglied,DD",
+    "Tina | Sonnenblume;Gildenleitung,Raider,Heiler",
     "Rolfine | Kerstin;Mitglied",
     "Besucher Bob;Gast",
     "Austausch Ali;Austauschschüler",
@@ -35,9 +35,9 @@ local function char(name, rank, classFile, level, note, officerNote, online)
 end
 
 Demo.ROSTER = {
-    char("Wurstinator", 3, "WARRIOR", 60, "Wursti", "", true),
+    char("Wurstinator", 3, "WARRIOR", 60, "Wursti", "Tank", true),
     char("Wurstbrot", 5, "MAGE", 34, "Twink von Wurstinator", ""),
-    char("Heilkraut", 4, "PRIEST", 40, "", "DC: Jens"),
+    char("Heilkraut", 4, "PRIEST", 40, "Heiler", "DC: Jens"),
     char("Rolf", 2, "PALADIN", 60, "Fluffy, Tank", "DC: Fluffy", true),
     char("Gamblergirl", 4, "PRIEST", 60, "Anna, Heiler", ""),
     char("Annaheal", 5, "DRUID", 42, "Anna Twink", ""),
@@ -45,9 +45,9 @@ Demo.ROSTER = {
     char("Motzhard", 3, "ROGUE", 60, "", "Nils", true),
     char("Körperklaus", 4, "HUNTER", 51, "", ""),
     char("Sonnenblume", 1, "DRUID", 60, "Tina", "Gildenleitung", true),
-    char("Rolfine", 4, "SHAMAN", 27, "Kerstin", ""),
-    char("Jeanlars", 4, "WARRIOR", 19, "Jan-Lars", ""),
-    char("Ohnediscord", 4, "HUNTER", 60, "Ingi", ""),
+    char("Rolfine", 4, "SHAMAN", 27, "Kerstin, Tank", ""),
+    char("Jeanlars", 4, "WARRIOR", 19, "Jan-Lars, DD", ""),
+    char("Ohnediscord", 4, "HUNTER", 60, "Ingi, Fernkampf", ""),
     char("Mysteriös", 5, "ROGUE", 12, "Twink", ""),
 }
 
@@ -71,7 +71,7 @@ function Demo.buildRoster()
             rankName = Demo.RANKS[c.rank],
             level = c.level,
             classFile = c.classFile,
-            className = c.classFile,
+            className = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[c.classFile]) or c.classFile,
             note = c.note,
             officerNote = c.officerNote,
             online = c.online,

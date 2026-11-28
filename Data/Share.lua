@@ -12,6 +12,8 @@
 --   M;<character>                    character is a main (never an alt)
 --   ID;<Discord name>                Discord member ignored
 --   IC;<character>                   character ignored
+--   DR;<character>[;<role>[;<role>]]  manual dungeon roles (tank, heal, melee, ranged; none = no role)
+--   PR;<character>[;<profession>...]  manual professions (alchemy, mining, ...; none = no profession)
 -- Characters are full names ("Name-Realm"), Discord names the display names of the import.
 
 local _, ns = ...
@@ -20,7 +22,7 @@ local Share = {}
 ns.Share = Share
 
 Share.VERSION = "TGRD1"
-Share.KINDS = { L = 2, R = 2, T = 2, M = 1, ID = 1, IC = 1 }
+Share.KINDS = { L = 2, R = 2, T = 2, M = 1, ID = 1, IC = 1, DR = 1, PR = 1 }
 
 local SEP = "\001" -- separator of Matcher.pairKey
 
@@ -42,9 +44,15 @@ function Share.IsCode(text)
     return (text or ""):match("^%s*#%s*TGRD") ~= nil
 end
 
--- Number of decisions in a decisions table.
-function Share.Count(d)
+-- Number of decisions in a decisions table (plus manual dungeon roles, if given).
+function Share.Count(d, roles, profs)
     local n = 0
+    for _ in pairs(roles or {}) do
+        n = n + 1
+    end
+    for _ in pairs(profs or {}) do
+        n = n + 1
+    end
     for _, list in pairs({ d.links, d.rejected, d.twinkOf, d.markedMain, d.ignoredDiscord, d.ignoredChars }) do
         for _ in pairs(list or {}) do
             n = n + 1
@@ -54,7 +62,7 @@ function Share.Count(d)
 end
 
 -- Create the code. Returns text, number of entries.
-function Share.Export(d, guildName, created)
+function Share.Export(d, guildName, created, roles, profs)
     local lines = { "#" .. Share.VERSION .. ";" .. esc(created) .. ";" .. esc(guildName) }
     for _, c in ipairs(sortedKeys(d.links)) do
         lines[#lines + 1] = "L;" .. esc(c) .. ";" .. esc(d.links[c])
@@ -76,6 +84,20 @@ function Share.Export(d, guildName, created)
     end
     for _, c in ipairs(sortedKeys(d.ignoredChars)) do
         lines[#lines + 1] = "IC;" .. esc(c)
+    end
+    for _, c in ipairs(sortedKeys(roles)) do
+        local line = "DR;" .. esc(c)
+        for _, r in ipairs(roles[c]) do
+            line = line .. ";" .. r
+        end
+        lines[#lines + 1] = line
+    end
+    for _, c in ipairs(sortedKeys(profs)) do
+        local line = "PR;" .. esc(c)
+        for _, p in ipairs(profs[c]) do
+            line = line .. ";" .. p
+        end
+        lines[#lines + 1] = line
     end
     return table.concat(lines, "\n"), #lines - 1
 end
@@ -109,6 +131,39 @@ function Share.Parse(text)
                 r.warnings[#r.warnings + 1] = { line = lineNo, msg = "IMPORT_WARN_UNKNOWN_DIRECTIVE", detail = kind }
             elseif a == "" or (need == 2 and b == "") then
                 r.warnings[#r.warnings + 1] = { line = lineNo, msg = "SHARE_WARN_INCOMPLETE", detail = line }
+            elseif kind == "DR" then
+                -- dungeon roles: known role keys only, at most two
+                local roles, bad = {}, nil
+                for i = 3, #f do
+                    local role = ns.Util.trim(f[i]):lower()
+                    if ns.DungeonRoles.IsRole(role) then
+                        if #roles < ns.DungeonRoles.MAX then
+                            roles[#roles + 1] = role
+                        end
+                    elseif role ~= "" then
+                        bad = role
+                    end
+                end
+                if bad then
+                    r.warnings[#r.warnings + 1] = { line = lineNo, msg = "SHARE_WARN_ROLE", detail = bad }
+                end
+                r.entries[#r.entries + 1] = { kind = kind, a = a, roles = roles }
+                r.counts[kind] = (r.counts[kind] or 0) + 1
+            elseif kind == "PR" then
+                local list, bad = {}, nil
+                for i = 3, #f do
+                    local p = ns.Util.trim(f[i]):lower()
+                    if ns.Professions.IsProfession(p) then
+                        list[#list + 1] = p
+                    elseif p ~= "" then
+                        bad = p
+                    end
+                end
+                if bad then
+                    r.warnings[#r.warnings + 1] = { line = lineNo, msg = "SHARE_WARN_PROFESSION", detail = bad }
+                end
+                r.entries[#r.entries + 1] = { kind = kind, a = a, profs = list }
+                r.counts[kind] = (r.counts[kind] or 0) + 1
             else
                 r.entries[#r.entries + 1] = { kind = kind, a = a, b = need == 2 and b or nil }
                 r.counts[kind] = (r.counts[kind] or 0) + 1
@@ -129,7 +184,7 @@ end
 
 -- Merge parsed entries into a decisions table; shared entries win over own ones.
 -- Returns the number of entries that changed something.
-function Share.Merge(d, parsed)
+function Share.Merge(d, parsed, roles, profs)
     local changed = 0
     local function set(list, key, value)
         if list[key] ~= value then
@@ -156,6 +211,18 @@ function Share.Merge(d, parsed)
             set(d.ignoredDiscord, e.a, true)
         elseif e.kind == "IC" then
             set(d.ignoredChars, e.a, true)
+        elseif e.kind == "DR" and roles then
+            local own = roles[e.a]
+            if not own or not ns.DungeonRoles.Equal(own, e.roles) then
+                roles[e.a] = ns.DungeonRoles.Sort(e.roles)
+                changed = changed + 1
+            end
+        elseif e.kind == "PR" and profs then
+            local own = profs[e.a]
+            if not own or not ns.Professions.Equal(own, e.profs) then
+                profs[e.a] = ns.Professions.Sort(e.profs)
+                changed = changed + 1
+            end
         end
     end
     return changed

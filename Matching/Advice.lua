@@ -39,29 +39,122 @@ local function mainOf(row, c)
     return c
 end
 
--- Values for the note templates.
-function Advice.templateValues(row, c)
+-- Abbreviations of a list of keys ("mDD/rDD", "BB/Schmied"); empty abbreviations are left out.
+local function abbreviate(keys, abbr)
+    local parts = {}
+    for _, k in ipairs(keys or {}) do
+        local a = abbr and abbr[k]
+        if a and Util.trim(a) ~= "" then
+            parts[#parts + 1] = Util.trim(a)
+        end
+    end
+    return parts
+end
+
+-- Values for the note templates. `settings` gives the abbreviations for {roles} and {professions}.
+function Advice.templateValues(row, c, settings)
     local m = row.member
     local main = mainOf(row, c)
+    local abbr = settings and settings.abbreviations or {}
+    local roles = abbreviate(c.dungeonRoles, abbr.roles)
+    local profs = abbreviate(c.professions, abbr.professions)
     return {
         discord = m and m.display or "",
         nick = m and Text.nickname(m.analysis) or "",
         main = main and main.name or c.name,
         char = c.name,
-    }
+        roles = table.concat(roles, "/"),
+        professions = table.concat(profs, "/"),
+    }, { roles = c.dungeonRoles or {}, professions = c.professions or {} }
 end
 
 local function isAlt(row, c)
     return c ~= mainOf(row, c)
 end
+Advice.isAlt = isAlt
 
--- Suggested note text for a character (template for mains or alts), shortened to the note limit.
-function Advice.suggestedNote(row, c, settings)
-    local template = isAlt(row, c) and settings.twinkNoteTemplate or settings.noteTemplate
+-- Template of a character for a note ("public" | "officer"), nil if empty or that note is switched off.
+function Advice.template(row, c, settings, kind)
+    local on = (kind == "officer") and settings.noteCheckOfficer or (kind == "public" and settings.noteCheckPublic)
+    if not on then
+        return nil
+    end
+    local key = (isAlt(row, c) and "twink" or "main") .. ((kind == "officer") and "Officer" or "Public")
+    local template = settings.noteTemplates and settings.noteTemplates[key]
     if not template or Util.trim(template) == "" then
         return nil
     end
-    return Util.utf8truncate(Util.format(template, Advice.templateValues(row, c)), Advice.NOTE_MAX_BYTES)
+    return template
+end
+
+-- Fill a template: placeholders replaced, double spaces removed, cut to the note limit.
+function Advice.render(template, values)
+    local text = Util.trim((Util.format(template, values):gsub("%s+", " ")))
+    -- separators next to an empty placeholder: at the start, at the end, or doubled
+    local before
+    repeat
+        before = text
+        text = text:gsub("^[|/,;%-]%s*", ""):gsub("%s*[|/,;%-]$", ""):gsub("([|/,;])%s*[|/,;]", "%1")
+        text = Util.trim(text)
+    until text == before
+    return Util.utf8truncate(text, Advice.NOTE_MAX_BYTES)
+end
+
+-- Suggested note text for a character, shortened to the note limit. Without `kind` the officer note
+-- is used if its template is on, otherwise the public note. Returns text, kind (nil if no template
+-- or the text would be empty).
+function Advice.suggestedNote(row, c, settings, kind)
+    for _, k in ipairs(kind and { kind } or { "officer", "public" }) do
+        local template = Advice.template(row, c, settings, k)
+        if template then
+            local text = Advice.render(template, (Advice.templateValues(row, c, settings)))
+            if text ~= "" then
+                return text, k
+            end
+        end
+    end
+    return nil
+end
+
+local function contains(hay, needle)
+    local h, n = Text.key(hay or ""), Text.key(needle or "")
+    return n ~= "" and h:find(n, 1, true) ~= nil
+end
+
+-- True if a note (`kind` of character `c`) fits its template: every filled placeholder value must
+-- appear in the note. The Discord name may also appear as its nickname part; dungeon roles and
+-- professions count if the note names them in any known spelling (not only the abbreviation).
+-- Templates without placeholders must appear as a whole.
+function Advice.noteFits(c, kind, template, values, lists, member)
+    local note = (kind == "officer") and c.officerNote or c.note
+    local anyPlaceholder = false
+    for key in template:gmatch("{(%w+)}") do
+        anyPlaceholder = true
+        if key == "roles" or key == "professions" then
+            local found = (key == "roles" and c.noteRoles or c.noteProfessions) or {}
+            found = found[kind] or {}
+            for _, item in ipairs(lists[key] or {}) do
+                if not found[item] then
+                    return false
+                end
+            end
+        elseif key == "discord" or key == "nick" then
+            local v = values[key]
+            if v and v ~= "" and not (contains(note, v) or contains(note, values.discord)
+                or (member and contains(note, Text.nickname(member.analysis)))) then
+                return false
+            end
+        else
+            local v = values[key]
+            if v and v ~= "" and not contains(note, v) then
+                return false
+            end
+        end
+    end
+    if not anyPlaceholder then
+        return contains(note, Advice.render(template, values))
+    end
+    return true
 end
 
 -- Players this (unassigned) player might be an alt of: the Discord member that matches it best
@@ -80,11 +173,6 @@ end
 
 local function add(list, entry)
     list[#list + 1] = entry
-end
-
-local function contains(hay, needle)
-    local h, n = Text.key(hay or ""), Text.key(needle or "")
-    return n ~= "" and h:find(n, 1, true) ~= nil
 end
 
 -- Notes that name another Discord member than the one assigned.
@@ -137,10 +225,17 @@ function Advice.evaluate(rows, ctx)
     end
     local level = ns.Matcher.STATUS_LEVEL
 
+    -- start with the hints of the dungeon roles (DungeonRoles.Evaluate runs before)
     for _, row in ipairs(rows) do
         row.advice = {}
+        for _, e in ipairs(row.dungeonAdvice or {}) do
+            add(row.advice, e)
+        end
         for _, c in ipairs(Advice.rowChars(row)) do
             c.advice = {}
+            for _, e in ipairs(c.dungeonAdvice or {}) do
+                add(c.advice, e)
+            end
         end
     end
 
@@ -203,7 +298,14 @@ function Advice.evaluate(rows, ctx)
                 local attachedMain = c.player ~= p and c.player and c == c.player.main
                 -- alt (or its main) only known to the addon: mark it in the game
                 if (c.manualTwink or attachedMain) and main ~= c and (not c.detectedTwink or not c.noteMainChar) then
-                    local note = Advice.suggestedNote(row, c, s)
+                    -- the note that names the main (officer note first)
+                    local note
+                    for _, kind in ipairs({ "officer", "public" }) do
+                        local t = Advice.template(row, c, s, kind)
+                        if not note and t and t:find("{main}", 1, true) then
+                            note = Advice.suggestedNote(row, c, s, kind)
+                        end
+                    end
                     local byNote = s.twinkByNote and note ~= nil
                     local byRank = not c.detectedTwink and s.twinkByRank and hasTwinkRank
                     if byNote or byRank then
@@ -224,22 +326,16 @@ function Advice.evaluate(rows, ctx)
                 if c.isTwink and not c.mainChar and c.player and c.player.orphan and c == c.player.main and c == main then
                     add(c.advice, { code = "ORPHAN", a = c.twinkRefs and c.twinkRefs[1] })
                 end
-                -- expected note text
-                -- (the officer note is only checked if it can be read: Engine turns useOfficerNote off otherwise)
-                local checkNote = s.noteCheck == "public" or (s.noteCheck == "officer" and s.useOfficerNote)
-                if checkNote and m and (level[row.status] or 0) >= 2 then
-                    local note = (s.noteCheck == "officer") and c.officerNote or c.note
-                    local expected = Advice.suggestedNote(row, c, s)
-                    if expected then
-                        local ok
-                        if isAlt(row, c) then
-                            ok = contains(note, main.name)
-                        else
-                            ok = contains(note, expected) or contains(note, m.display)
-                                or contains(note, Text.nickname(m.analysis))
-                        end
-                        if not ok then
-                            add(c.advice, { code = "NOTE_EXPECTED", a = expected, method = s.noteCheck })
+                -- expected note texts (the officer note only if this rank may read it)
+                if m and (level[row.status] or 0) >= 2 then
+                    for _, kind in ipairs({ "officer", "public" }) do
+                        local template = Advice.template(row, c, s, kind)
+                        if template and (kind == "public" or ctx.canViewOfficer ~= false) then
+                            local values, lists = Advice.templateValues(row, c, s)
+                            local expected = Advice.render(template, values)
+                            if expected ~= "" and not Advice.noteFits(c, kind, template, values, lists, m) then
+                                add(c.advice, { code = "NOTE_EXPECTED", a = expected, method = kind })
+                            end
                         end
                     end
                 end

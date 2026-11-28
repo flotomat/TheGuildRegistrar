@@ -20,6 +20,16 @@ function UI.RegisterTab(def)
     end)
 end
 
+-- Pages of the "Settings" tab (sub tabs): { key, order, title, create(parent), refresh(frame) }.
+-- UI.SelectTab(pageKey) opens the Settings tab on that page.
+UI.settingsPages = {}
+function UI.RegisterSettingsPage(def)
+    UI.settingsPages[#UI.settingsPages + 1] = def
+    table.sort(UI.settingsPages, function(a, b)
+        return a.order < b.order
+    end)
+end
+
 local function savePosition()
     if not ns.db then
         return
@@ -136,6 +146,14 @@ function UI.SelectTab(key)
     if not main then
         create()
     end
+    -- a page of the Settings tab (also an old saved tab such as "ranks")
+    for _, page in ipairs(UI.settingsPages) do
+        if page.key == key then
+            UI.settingsPageRequest = key
+            key = "options"
+            break
+        end
+    end
     for _, def in ipairs(UI.tabs) do
         local f = UI.tabFrames[def.key]
         if def.key == key then
@@ -226,6 +244,15 @@ function UI.UpdateStatus()
         parts[#parts + 1] = "|cffff6666" .. L[state.error] .. "|r"
     elseif state.lastRun then
         parts[#parts + 1] = string.format("%s: |cffffffff%s|r", L.STATUS_LAST_RUN, formatTime(state.lastRun))
+    end
+    -- dungeon roles of all characters in the guild
+    local rc = state.results and state.results.dungeonRoleCounts
+    if rc and not state.running then
+        local roles = {}
+        for _, r in ipairs(ns.DungeonRoles.ROLES) do
+            roles[#roles + 1] = W.RoleIcon(r, 12) .. " |cffffffff" .. (rc[r] or 0) .. "|r"
+        end
+        parts[#parts + 1] = L.COL_DUNGEON_ROLES_LONG .. ": " .. table.concat(roles, "  ")
     end
     if state.canViewOfficer == false then
         parts[#parts + 1] = "|cffffaa00" .. L.STATUS_NO_OFFICER_NOTES .. "|r"

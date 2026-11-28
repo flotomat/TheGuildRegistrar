@@ -66,20 +66,43 @@ Später aktualisieren: Programm starten → **In die Zwischenablage exportieren*
 - **Twinks** haben einen Twink-Rang oder eine Notiz wie `Twink Wurstinator` (ein Twink, dessen Notiz den Discord-Namen nennt, wird ebenfalls gefunden),
 - optional folgen die Discord-Namen einer **Namensregel** wie `Spitzname | Main`.
 
-Welche Notizen gelesen werden, steht im Tab Abgleich über der Liste (*Zuordnung über Charakternamen und: ...*) und lässt sich dort oder im Tab Einstellungen umschalten. Nicht verwendete Notizen werden grau angezeigt. Manuelle Zuweisungen sind der **Ausweichweg** für Einzelfälle (siehe unten) und lassen sich mit anderen Offizieren teilen.
+Welche Notizen gelesen werden, steht im Tab Abgleich über der Liste (*Zuordnung über Charakternamen und: ...*) und lässt sich dort oder unter Einstellungen > Allgemein umschalten. Nicht verwendete Notizen werden grau angezeigt. Manuelle Zuweisungen sind der **Ausweichweg** für Einzelfälle (siehe unten) und lassen sich mit anderen Offizieren teilen.
 
-- **Tab Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Gast-Rollen (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
-- **Tab Einstellungen**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Bezeichnung „Twinks“ oder „Alts“, Twink-Muster, Notiz-Vorlagen und optionale Notiz-Prüfung, ignorierte Wörter, Schwellwerte.
+Der Tab **Einstellungen** hat vier Unterreiter:
+
+- **Allgemein**: Namensregel (z. B. `Spitzname | Main`), verwendete Notizen, Bezeichnung „Twinks“ oder „Alts“, Twink-Muster, ignorierte Wörter, Schwellwerte, Suche.
+- **Ränge**: jede Discord-Rolle dem passenden Gildenrang zuordnen, Discord-Rollen für Gäste (z. B. *Gast*, *Austauschschüler*) und Twink-Ränge markieren.
+- **Dungeonrollen**: Quellen und ihre Reihenfolge, Schlüsselwörter, Übersicht der Klassen (siehe unten).
+- **Notizen**: vier Vorlagen (Main/Twink × öffentliche/Offiziersnotiz) mit je einem Häkchen „prüfen“ pro Notiz (abgeschaltet: keine Prüfung, keine Vorschläge), dazu die Abkürzungen für Dungeonrollen und Berufe. Voreinstellung: Offiziersnotiz `DC: {discord}` bzw. `Twink {discord}` (die Discord-Verknüpfung pflegt einmalig ein Offizier), öffentliche Notiz `{roles} | {professions}`, z. B. `mDD/Tank | Schmied/BB`; leere Platzhalter hinterlassen keine Trennzeichen. Die Abkürzungen folgen der Spielsprache (Deutsch oder Englisch) und lassen sich ändern. Berufe liest das Addon aus den Notizen (deutsche und englische Namen und übliche Abkürzungen); die Notiz-Prüfung erkennt Dungeonrollen und Berufe in jeder bekannten Schreibweise.
 - Im Tab **Abgleich** zeigt die Spalte *Anpassen* (und der Tooltip), was zu ändern ist: Gildenrang, Twink-Kennzeichnung, Gildennotiz, Zuordnung, Discord-Name. Ein Klick auf **+** klappt die Twinks eines Spielers aus.
-- Die **Suche** im Tab Abgleich durchsucht alle Spalten (Discord-Name und -Rollen, Charakter, Realm, beide Notizen, Rang, Klasse, Stufe, Status, Hinweise). Bei mehreren Wörtern müssen alle vorkommen. Groß-/Kleinschreibung, Umlaute (`koerper` findet *Körper*), Akzente und Apostrophe spielen keine Rolle, Wortteile werden gefunden, und ab 4 Buchstaben wird ein Tippfehler toleriert (im Tab Einstellungen abschaltbar). Treffer, die andere Filter ausblenden, werden über der Liste gezählt und lassen sich per Klick anzeigen; der Tooltip zeigt, wo der Treffer liegt.
-- **Rechtsklick** auf einen Eintrag (oder einen Twink darunter) zeigt alle Aktionen. Was für den Eintrag nicht passt, ist ausgegraut; der Tooltip sagt, warum.
+- Die **Suche** im Tab Abgleich durchsucht alle Spalten (Discord-Name und -Rollen, Charakter, Realm, Dungeonrollen, beide Notizen, Rang, Klasse, Stufe, Status, Hinweise). Bei mehreren Wörtern müssen alle vorkommen. Groß-/Kleinschreibung, Umlaute (`koerper` findet *Körper*), Akzente und Apostrophe spielen keine Rolle, Wortteile werden gefunden, und ab 4 Buchstaben wird ein Tippfehler toleriert (unter Einstellungen > Allgemein abschaltbar). Treffer, die andere Filter ausblenden, werden über der Liste gezählt und lassen sich per Klick anzeigen; der Tooltip zeigt, wo der Treffer liegt.
+- **Rechtsklick** auf einen Eintrag (oder einen Twink darunter). Was das Menü anbietet, hängt von der Spalte ab:
+  - *Status*, *Discord*, *Charakter*: Zuweisungen (Discord-Mitglied, Twink/Main),
+  - *Dungeon* und *Berufe*: nur die Dungeonrollen bzw. Berufe dieses Charakters,
+  - *Notizen*: nur Notizen vormerken und Notiz-Vorschläge,
+  - *Rang* und *Anpassen*: alle Aktionen.
+
+  Was für den Eintrag nicht passt, ist ausgegraut; der Tooltip sagt, warum.
   - **Zuweisung bestätigen (fest)**: Die Zuweisung ändert sich nicht mehr automatisch.
   - **Bestätigung aufheben**: wieder automatische Zuordnung.
   - **Verbindung zum Discord-Mitglied lösen**: Der Charakter (als Main mit seinen Twinks) wird diesem Discord-Account nicht mehr zugeordnet. Bei einer festen Zuweisung fragt vorher ein Hinweisfenster. Rückgängig über *Manuelle Entscheidungen zurücksetzen*.
   - **Charakter per Name hinzufügen** / **Discord-Mitglied per Name zuweisen**, **Anderen Kandidaten zuordnen**, **Als Twink zuordnen von** / **Als Main markieren**, ignorieren, anflüstern, Notiz-Vorschlag kopieren.
+- **Berufe**: aus den Notizen gelesen (deutsche und englische Namen und übliche Abkürzungen) oder per Rechtsklick in der Spalte *Berufe* festgelegt (höchstens zwei Hauptberufe, dazu Kochkunst, Angeln, Erste Hilfe). Spalte mit Symbolen, Filter über das Menü oben rechts; manuelle Berufe werden wie Dungeonrollen geteilt.
+- **Dungeonrollen** (Tank, Heiler, Nahkampf-DD, Fernkampf-DD): jeder Charakter kann bis zu zwei haben, eine Angabe für Dungeons und Raids. Spalte *Dungeon* mit Symbolen (Schild, grünes Plus, gekreuzte Schwerter, Bogen), Filter oben rechts (ein Menü für Dungeonrolle und Beruf, beides kombinierbar), Zählung in der Statuszeile. Das Addon liest sie aus diesen Quellen, die erste mit einer Angabe gilt (Reihenfolge und An/Aus unter Einstellungen > Dungeonrollen):
+  1. **manuell**: Rechtsklick > *Dungeonrolle festlegen* (nur die Rollen, die die Klasse hat),
+  2. **Discord-Rollen** wie *Tank* oder *Heiler* - nur wenn das Discord-Mitglied genau einen Charakter hat, sonst ein Hinweis,
+  3. **Offiziersnotiz**, 4. **öffentliche Notiz**, z. B. `DC: Jens, Tank` oder `Heiler/Tank`.
+
+  Ein allgemeines „DD“/„DPS“ wird über die Klasse aufgelöst, wenn sie nur eine Art DD hat (z. B. Schurke → Nahkampf, Magier → Fernkampf); bei Jäger, Druide und Schamane gibt es einen Hinweis. Spezialisierungen werden nicht ausgewertet. Widersprüche zwischen Quellen und Rollen, die die Klasse nicht hat, erscheinen als Hinweis. Manuelle Dungeonrollen werden mit *Zuweisungen teilen* weitergegeben und bleiben beim Löschen der Discord-Daten erhalten (außer *Auch manuelle Dungeonrollen löschen* ist angehakt).
 - **Löschschutz**: Bevor eine Aktion manuelle Arbeit entfernt oder überschreibt, zeigt ein Warnfenster, was verloren geht (z. B. *Feste Zuweisungen: 3*, *Ignorierte Charaktere: 1*, *Geänderte Einstellungen*), mit nur zwei Knöpfen: Abbrechen und z. B. Löschen. Das gilt für Löschen der importierten Daten, Zurücksetzen (Discord-Mitglied, Twink/Main, Einstellungen), Bestätigung aufheben, Verbindung lösen, Ersetzen einer festen Zuweisung durch ein anderes Discord-Mitglied und das Übernehmen eines geteilten Codes, der eigene Entscheidungen überschreibt.
 - **Zuweisungen teilen** (Tab Abgleich) erzeugt einen Code mit deinen manuellen Entscheidungen. Gib ihn anderen Offizieren, z. B. als Textdatei in Discord; sie fügen ihn in ihrem Tab **Import** ein und bestätigen. Geteilte Einträge ersetzen ihre eigenen Entscheidungen für dieselben Charaktere. Der Code enthält Discord-Namen und Zuweisungen - gib ihn nur an Personen weiter, die sie sehen dürfen.
-- Gildennotizen schreiben und Gildenränge ändern behält WoW: Forever dem Blizzard-Interface vor - das erledigst du im Gildenfenster. Im Addon sind diese Menüpunkte ausgegraut.
+- **Gildennotizen vorbereiten**: Addons dürfen in WoW: Forever keine Gildennotizen schreiben. Das Addon bereitet den Text vor, du fügst ihn im Blizzard-Gildenfenster ein:
+  1. In der Spalte *Notizen* hat jeder Charakter drei Knöpfe: öffentliche Notiz vormerken, Offiziersnotiz vormerken (je in einem Fenster mit 31-Byte-Zähler und Vorschlag aus der Vorlage) oder beide automatisch aus den Vorlagen. **Notizen vormerken ...** unten macht das für alle Charaktere, deren Notiz nicht zur Vorlage passt (ab einem wählbaren Status, Standard *eindeutig*); schon vorgemerkte Notizen bleiben. Vorgemerkte Texte erscheinen in Gold.
+  2. Öffne das Gildenfenster (Mitglieder). Daneben zeigt ein Fenster die vorgemerkten Notizen des ausgewählten Mitglieds (Klick: bearbeiten) und wer sonst noch Vormerkungen hat.
+  3. Öffne im Gildenfenster die Notiz: Unter Blizzards Fenster erscheint ein Feld mit dem vorgemerkten, bereits markierten Text. **Strg+C**, ins Blizzard-Feld klicken, **Strg+A**, **Strg+V**, **Enter**.
+  4. Sobald die Gildenliste die neue Notiz zeigt, wird sie abgehakt (Ton + kurze Meldung). Begleitfenster, Kopierfeld und Meldung lassen sich unter Einstellungen > Notizen abschalten.
+
+  Gildenränge ändern behält WoW: Forever ebenfalls dem Blizzard-Interface vor; der Menüpunkt ist ausgegraut.
 
 ## 7. Weitere Offiziere
 

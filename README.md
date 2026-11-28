@@ -33,8 +33,11 @@ Which notes are read is shown above the list and can be switched there (public n
 - **Filters & sorting**: by status, side (only in Discord / only in guild), rank mismatch, hints, online, and a **fuzzy search** over all columns (several words, umlauts/accents/apostrophes ignored, parts of words, one typo tolerated).
 - **Officer actions** (right-click): confirm (fix), remove the confirmation, **separate** a character from a Discord account (fixed ones only after a confirmation), assign another candidate, add a character or a Discord member by name, assign as alt of / mark as main, ignore, whisper, copy names, **copy a note suggestion** to paste into the guild window. The menu always shows every action; actions that do not fit an entry are greyed out and say why.
 - **Share assignments** with other officers as a code (Comparison tab), taken over in the Import tab.
+- **Dungeon roles** (Tank, Healer, Melee DD, Ranged DD, up to two per character) from manual settings, Discord roles (members with one character), officer and public notes - priority configurable; generic "DD" resolved by class; own icons, column, filter and hints for contradictions.
 - **Delete protection**: whenever an action would remove or overwrite manual work (fixed or separated assignments, alt/main decisions, ignored entries, changed settings), a warning lists what would be lost and asks first.
-- **Writing guild notes and changing guild ranks** from the addon is not possible: WoW: Forever reserves both for the Blizzard UI. The menu entries are shown greyed out; the hints tell you what to change in the guild window.
+- **Prepared guild notes**: WoW: Forever does not let addons write guild notes, so the addon prepares them (by hand, from four templates for main/alt x public/officer note, or for many characters at once). A panel next to Blizzard's guild window shows them, a copy box with the selected text appears when you open a note there, and prepared notes are ticked off automatically once the roster shows them.
+- **Professions** read from the notes or set manually, with a filter; columns with own icons for dungeon roles and professions; the right-click menu offers what fits the clicked column.
+- **Changing guild ranks** is reserved for the Blizzard UI; the menu entry is greyed out.
 - **Export** of the filtered list, e.g. to post "please update your nickname" in Discord.
 - **Demo mode** (`/tgr demo`) to try everything without a guild.
 - English and German; ready for more languages ([how to translate](docs/translating.md)).
@@ -101,7 +104,8 @@ The Guild Registrar is an independent fan project and is not affiliated with, en
 - Filter, Sortierung, Tooltips mit Begründung, Export.
 - Rechtsklick-Aktionen: bestätigen (fest), Bestätigung aufheben, **Verbindung lösen** (bei festen Zuweisungen erst nach Rückfrage), anderen Kandidaten oder per Name zuweisen, als Twink zuordnen / als Main markieren, ignorieren, Notiz-Vorschlag kopieren. Das Menü zeigt immer alle Aktionen; was für einen Eintrag nicht passt, ist ausgegraut und sagt, warum.
 - Manuelle Zuweisungen als Code mit anderen Offizieren teilen.
-- Gildennotizen schreiben und Gildenränge ändern ist per Addon nicht möglich: WoW: Forever behält beides dem Blizzard-Interface vor. Die Menüpunkte sind ausgegraut; die Hinweise sagen, was im Gildenfenster zu ändern ist.
+- Dungeonrollen und Berufe (aus Discord-Rollen und Notizen oder manuell) mit eigenen Symbolen; das Rechtsklick-Menü richtet sich nach der angeklickten Spalte.
+- Gildennotizen vormerken (von Hand, aus Vorlagen oder für viele auf einmal): ein Begleitfenster am Blizzard-Gildenfenster und ein Kopierfeld beim Bearbeiten einer Notiz helfen beim Einfügen, danach wird automatisch abgehakt. Gildenränge ändern bleibt dem Blizzard-Interface vorbehalten.
 
 Weil ein Addon nicht ins Internet kann, liest das kleine Hilfsprogramm **Peasant** (Download auf der [Release-Seite](https://github.com/Flotomat/TheGuildRegistrar/releases/latest)) mit **eurem eigenen Discord-Bot** die Mitgliederliste aus und legt sie in die Zwischenablage. Im Spiel fügt ihr sie mit `/tgr` → *Import* ein (das Fenster lässt sich auch über **Optionen → AddOns** öffnen). Weitere Offiziere brauchen keinen eigenen Bot: Der Gildenmeister erzeugt in Peasant einen **Einladungscode** (das mit einem Passwort verschlüsselte Bot-Token), den die Offiziere einlösen.
 

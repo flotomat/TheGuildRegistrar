@@ -66,13 +66,17 @@ local function create(parent)
                 local c = parsed.counts
                 local msg = string.format(L.SHARE_IMPORT_CONFIRM, parsed.created ~= "" and parsed.created or "-",
                     c.L or 0, c.R or 0, (c.T or 0) + (c.M or 0), (c.ID or 0) + (c.IC or 0))
+                if (c.DR or 0) + (c.PR or 0) > 0 then
+                    msg = msg .. "\n\n" .. string.format(L.SHARE_IMPORT_ROLES, c.DR or 0, c.PR or 0)
+                end
                 local guild = ns.DB.GuildName() or ""
                 if parsed.guild and parsed.guild ~= "" and parsed.guild ~= guild then
                     msg = msg .. "\n\n" .. string.format(L.SHARE_GUILD_OTHER, parsed.guild, guild)
                 end
                 -- own decisions the code would overwrite or remove -> delete warning
                 local g = ns.DB.Guild()
-                local lost = ns.Protect.Share(g and g.decisions, parsed)
+                local lost = ns.Protect.Share(g and g.decisions, parsed, g and g.dungeonRoles.manual,
+                    g and g.professions.manual)
                 ns.Dialogs.ShowDeleteWarning(L.SHARE_IMPORT_TITLE, msg, lost, function()
                     local n = ns.Engine.ImportDecisions(parsed)
                     local done = string.format(L.SHARE_IMPORTED, n)
@@ -122,8 +126,10 @@ local function create(parent)
 
     -- delete Discord data (import + decisions): current guild / all guilds, always with confirmation
     local deleteBtn = W.Button(side, L.IMPORT_DELETE, 260, 24, function()
-        ns.Dialogs.ShowDeleteWarning(L.IMPORT_DELETE, L.IMPORT_DELETE_CONFIRM, ns.Protect.GuildData(ns.DB.Guild()), function()
-            if ns.Engine.DeleteImportedData() then
+        local withRoles = ns.db.ui.deleteDungeonRoles and true or false
+        ns.Dialogs.ShowDeleteWarning(L.IMPORT_DELETE, withRoles and L.IMPORT_DELETE_CONFIRM_ROLES or L.IMPORT_DELETE_CONFIRM,
+            ns.Protect.GuildData(ns.DB.Guild(), withRoles), function()
+            if ns.Engine.DeleteImportedData(withRoles) then
                 f.result:SetText("|cff44ff44" .. L.IMPORT_DELETED .. "|r")
                 ns.Engine.Print(L.IMPORT_DELETED)
             end
@@ -140,6 +146,12 @@ local function create(parent)
     W.Tooltip(deleteAllBtn, L.IMPORT_DELETE_ALL, W.LocText("IMPORT_DELETE_ALL_TOOLTIP"))
     f.deleteAllBtn = deleteAllBtn
 
+    -- manual dungeon roles hold no Discord data: kept unless this is checked
+    local rolesCb = W.Check(side, L.IMPORT_DELETE_ROLES, function(_, checked)
+        ns.db.ui.deleteDungeonRoles = checked or nil
+    end, W.LocText("IMPORT_DELETE_ROLES_TOOLTIP"))
+    f.rolesCb = rolesCb
+
     local stored = W.Label(side, "", "GameFontHighlightSmall")
     stored:SetPoint("RIGHT", 0, 0)
     stored:SetJustifyV("BOTTOM")
@@ -149,7 +161,8 @@ local function create(parent)
     help:SetPoint("BOTTOMLEFT", 0, 0)
     help:SetPoint("RIGHT", 0, 0)
     help:SetJustifyV("BOTTOM")
-    deleteAllBtn:SetPoint("BOTTOMLEFT", help, "TOPLEFT", 0, 12)
+    rolesCb:SetPoint("BOTTOMLEFT", help, "TOPLEFT", -4, 8)
+    deleteAllBtn:SetPoint("BOTTOMLEFT", rolesCb, "TOPLEFT", 4, 4)
     deleteBtn:SetPoint("BOTTOMLEFT", deleteAllBtn, "TOPLEFT", 0, 6)
     stored:SetPoint("BOTTOMLEFT", deleteBtn, "TOPLEFT", 0, 8)
     return f
@@ -170,7 +183,8 @@ end
 
 -- Confirm and delete the Discord data of all guilds (also used by /tgr wipe).
 function ns.UI.ConfirmDeleteAllData(onDone)
-    local keys = ns.DB.GuildsWithData()
+    local withRoles = ns.db.ui.deleteDungeonRoles and true or false
+    local keys = ns.DB.GuildsWithData(withRoles)
     if #keys == 0 then
         ns.Engine.Print(L.IMPORT_STORED_NONE)
         return
@@ -178,10 +192,10 @@ function ns.UI.ConfirmDeleteAllData(onDone)
     local text = string.format(L.IMPORT_DELETE_ALL_CONFIRM, #keys, guildList(keys, 15))
     local lost = {}
     for _, key in ipairs(keys) do
-        ns.Protect.Merge(lost, ns.Protect.GuildData(ns.db.guilds[key]))
+        ns.Protect.Merge(lost, ns.Protect.GuildData(ns.db.guilds[key], withRoles))
     end
     ns.Dialogs.ShowDeleteWarning(L.IMPORT_DELETE_ALL, text, lost, function()
-        local n = ns.Engine.DeleteAllImportedData()
+        local n = ns.Engine.DeleteAllImportedData(withRoles)
         ns.Engine.Print(string.format(L.IMPORT_DELETED_ALL, n))
         if onDone then
             onDone(n)
@@ -191,6 +205,7 @@ end
 
 local function refresh(f)
     -- data stored on this account (all real guilds, not the demo)
+    f.rolesCb:SetChecked(ns.db.ui.deleteDungeonRoles and true or false)
     local keys = ns.DB.GuildsWithData()
     if #keys > 0 then
         f.stored:SetText(string.format(L.IMPORT_STORED, #keys, guildList(keys, 6)))
